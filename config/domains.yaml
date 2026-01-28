@@ -1,0 +1,13 @@
+# Example domains configuration file
+# List domains to scan (one per line or as YAML list)
+
+# Example domains (for testing)
+domains:
+  - example.com
+  - test.example.com
+
+# You can also specify domains directly in the CLI:
+# security-scanner scan -d example.com -d test.com
+#
+# Or use a simple text file:
+# security-scanner scan -f domains.txt

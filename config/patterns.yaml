@@ -1,0 +1,145 @@
+# Platform-specific subdomain takeover detection patterns
+# These patterns identify vulnerable services across different cloud platforms
+
+platforms:
+  heroku:
+    name: "Heroku"
+    cname_patterns:
+      - "*.herokuapp.com"
+      - "*.herokussl.com"
+    http_patterns:
+      - "No such app"
+      - "There's nothing here, yet"
+      - "herokucdn.com/error-pages/no-such-app.html"
+    dns_error: "NXDOMAIN"
+    severity: "HIGH"
+    description: "Heroku app not found or deleted - subdomain may be claimable"
+    remediation: |
+      1. Verify if the Heroku app still exists
+      2. If not needed, remove the CNAME record immediately
+      3. If needed, recreate the Heroku app or update the CNAME target
+      4. Monitor for unauthorized app creations
+
+  github_pages:
+    name: "GitHub Pages"
+    cname_patterns:
+      - "*.github.io"
+    http_patterns:
+      - "There isn't a GitHub Pages site here"
+      - "404 - File not found"
+      - "For root URLs (like http://example.com/) you must provide an index.html"
+    dns_error: "NXDOMAIN"
+    severity: "HIGH"
+    description: "GitHub Pages site not configured or deleted"
+    remediation: |
+      1. Verify GitHub Pages configuration
+      2. Remove CNAME record if site no longer needed
+      3. Configure GitHub Pages repository if site is needed
+      4. Enable branch protection on the repository
+
+  aws_s3:
+    name: "AWS S3"
+    cname_patterns:
+      - "*.s3.amazonaws.com"
+      - "*.s3-*.amazonaws.com"
+      - "*.s3-website-*.amazonaws.com"
+    http_patterns:
+      - "NoSuchBucket"
+      - "The specified bucket does not exist"
+      - "Code: NoSuchBucket"
+    dns_error: "NXDOMAIN"
+    severity: "HIGH"
+    description: "S3 bucket does not exist - bucket name may be claimable"
+    remediation: |
+      1. Verify S3 bucket existence
+      2. Remove CNAME if bucket no longer needed
+      3. Create bucket with exact name if needed
+      4. Enable bucket policies to prevent takeover
+
+  aws_elastic_beanstalk:
+    name: "AWS Elastic Beanstalk"
+    cname_patterns:
+      - "*.elasticbeanstalk.com"
+      - "*.us-east-1.elasticbeanstalk.com"
+      - "*.us-west-2.elasticbeanstalk.com"
+      - "*.eu-west-1.elasticbeanstalk.com"
+    http_patterns:
+      - "Service not found"
+      - "The specified service does not exist"
+    dns_error: "NXDOMAIN"
+    severity: "HIGH"
+    description: "Elastic Beanstalk environment not found"
+    remediation: |
+      1. Verify Elastic Beanstalk environment status
+      2. Remove CNAME if environment no longer needed
+      3. Recreate environment if needed
+      4. Use CloudFormation for infrastructure management
+
+  azure:
+    name: "Microsoft Azure"
+    cname_patterns:
+      - "*.azurewebsites.net"
+      - "*.cloudapp.net"
+      - "*.cloudapp.azure.com"
+      - "*.trafficmanager.net"
+    http_patterns:
+      - "404 - Web app not found"
+      - "Error 404 - Web app not found"
+      - "The resource you are looking for has been removed"
+    dns_error: "NXDOMAIN"
+    severity: "HIGH"
+    description: "Azure service not found or deallocated"
+    remediation: |
+      1. Verify Azure resource status
+      2. Remove CNAME if resource no longer needed
+      3. Recreate Azure resource if needed
+      4. Use Azure Resource Manager templates
+
+  google_cloud:
+    name: "Google Cloud Platform"
+    cname_patterns:
+      - "*.appspot.com"
+      - "*.cloudfunctions.net"
+      - "*.run.app"
+    http_patterns:
+      - "404. That's an error"
+      - "The requested URL was not found on this server"
+    dns_error: "NXDOMAIN"
+    severity: "MEDIUM"
+    description: "Google Cloud service not found"
+    remediation: |
+      1. Verify Google Cloud service exists
+      2. Remove CNAME if service no longer needed
+      3. Redeploy service if needed
+
+  netlify:
+    name: "Netlify"
+    cname_patterns:
+      - "*.netlify.com"
+      - "*.netlify.app"
+    http_patterns:
+      - "Not Found - Request ID:"
+      - "There isn't a Netlify site"
+    dns_error: "NXDOMAIN"
+    severity: "HIGH"
+    description: "Netlify site not found or deleted"
+    remediation: |
+      1. Verify Netlify site configuration
+      2. Remove CNAME if site no longer needed
+      3. Reconfigure Netlify site if needed
+
+  vercel:
+    name: "Vercel"
+    cname_patterns:
+      - "*.vercel.app"
+      - "*.now.sh"
+    http_patterns:
+      - "The deployment could not be found"
+      - "404: NOT_FOUND"
+    dns_error: "NXDOMAIN"
+    severity: "HIGH"
+    description: "Vercel deployment not found"
+    remediation: |
+      1. Verify Vercel deployment status
+      2. Remove CNAME if deployment no longer needed
+      3. Redeploy to Vercel if needed
