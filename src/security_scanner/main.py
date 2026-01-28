@@ -242,6 +242,125 @@ def list_scans(
 
 
 @app.command()
+def report(
+    scan_id: str = typer.Option(..., "--scan-id", "-s", help="Scan ID to generate report for"),
+    format: str = typer.Option(
+        "html,json",
+        "--format",
+        "-f",
+        help="Report formats (comma-separated: html,json,markdown,csv)",
+    ),
+    output_dir: Optional[Path] = typer.Option(
+        None,
+        "--output",
+        "-o",
+        help="Output directory for reports",
+    ),
+) -> None:
+    """
+    Generate reports from a previous scan.
+
+    Examples:
+        # Generate HTML report
+        security-scanner report --scan-id <SCAN_ID> --format html
+
+        # Generate multiple formats
+        security-scanner report --scan-id <SCAN_ID> --format html,json,markdown
+    """
+    settings = load_settings()
+
+    # Use provided output dir or default from settings
+    report_dir = output_dir if output_dir else settings.report_output_dir
+    report_dir.mkdir(parents=True, exist_ok=True)
+
+    # Parse formats
+    formats = [f.strip().lower() for f in format.split(",")]
+    valid_formats = {"html", "json", "markdown", "csv"}
+    invalid = set(formats) - valid_formats
+    if invalid:
+        console.print(f"[red]Error: Invalid format(s): {', '.join(invalid)}[/red]")
+        console.print(f"Valid formats: {', '.join(valid_formats)}")
+        raise typer.Exit(1)
+
+    try:
+        asyncio.run(_generate_report(settings, scan_id, formats, report_dir))
+    except Exception as e:
+        console.print(f"[red]Error: {e}[/red]")
+        raise typer.Exit(1)
+
+
+async def _generate_report(
+    settings: Settings,
+    scan_id: str,
+    formats: list[str],
+    output_dir: Path,
+) -> None:
+    """Generate reports asynchronously."""
+    from security_scanner.reporters.csv_reporter import CSVReporter
+    from security_scanner.reporters.html_reporter import HTMLReporter
+    from security_scanner.reporters.json_reporter import JSONReporter
+    from security_scanner.reporters.markdown_reporter import MarkdownReporter
+
+    db = DatabaseManager(settings.database_path)
+
+    # Get scan data
+    scan = await db.get_scan(scan_id)
+    if not scan:
+        console.print(f"[red]Error: Scan not found: {scan_id}[/red]")
+        raise typer.Exit(1)
+
+    # Get findings
+    findings = await db.get_scan_findings(scan_id)
+
+    console.print(f"\nGenerating reports for scan {scan_id[:8]}...")
+    console.print(f"Found {len(findings)} findings\n")
+
+    # Build scan results dictionary
+    findings_by_severity = {
+        "CRITICAL": sum(1 for f in findings if f.severity == "CRITICAL"),
+        "HIGH": sum(1 for f in findings if f.severity == "HIGH"),
+        "MEDIUM": sum(1 for f in findings if f.severity == "MEDIUM"),
+        "LOW": sum(1 for f in findings if f.severity == "LOW"),
+    }
+
+    scan_results = {
+        "scan_id": scan.id,
+        "start_time": scan.start_time,
+        "end_time": scan.end_time,
+        "duration_seconds": scan.duration_seconds,
+        "domains": scan.domains_scanned,
+        "status": scan.status,
+        "scanner_version": scan.scanner_version,
+        "findings": findings,
+        "summary": findings_by_severity,
+    }
+
+    # Generate reports
+    reporters = {
+        "json": JSONReporter(),
+        "html": HTMLReporter(),
+        "markdown": MarkdownReporter(),
+        "csv": CSVReporter(),
+    }
+
+    generated = []
+    for fmt in formats:
+        reporter = reporters[fmt]
+        filename = f"scan_{scan_id[:8]}_report.{fmt if fmt != 'markdown' else 'md'}"
+        output_path = output_dir / filename
+
+        reporter.generate(
+            scan_results=scan_results,
+            output_path=output_path,
+        )
+
+        generated.append(output_path)
+        console.print(f"[green]✓[/green] {fmt.upper()} report: {output_path}")
+
+    console.print(f"\n[bold green]Reports generated successfully![/bold green]")
+
+
+@app.command()
 def validate_config(
     config_file: Optional[Path] = typer.Option(
         None,
