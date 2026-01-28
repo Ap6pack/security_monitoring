@@ -120,6 +120,10 @@ class CertificateScanner:
                 # Remove duplicates
                 san_domains = list(set(san_domains))
 
+                # Skip certificates with no domain names
+                if not san_domains:
+                    continue
+
                 # Check for wildcards
                 is_wildcard = any(name.startswith("*.") for name in san_domains)
 

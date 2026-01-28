@@ -18,20 +18,20 @@ class TestDanglingDNSDetector:
     """Test dangling DNS detector."""
 
     @pytest.fixture
-    def mock_dns_scanner(self) -> DNSScanner:
+    def mock_dns_scanner(self) -> MagicMock:
         """Create mock DNS scanner."""
         scanner = MagicMock(spec=DNSScanner)
         scanner.check_dangling_cname = AsyncMock()
         return scanner
 
     @pytest.fixture
-    def detector(self, mock_dns_scanner: DNSScanner) -> DanglingDNSDetector:
+    def detector(self, mock_dns_scanner: MagicMock) -> DanglingDNSDetector:
         """Create dangling DNS detector instance."""
         return DanglingDNSDetector(dns_scanner=mock_dns_scanner)
 
     @pytest.mark.asyncio
     async def test_detect_dangling_cname(
-        self, detector: DanglingDNSDetector, mock_dns_scanner: DNSScanner
+        self, detector: DanglingDNSDetector, mock_dns_scanner: MagicMock
     ) -> None:
         """Test detection of dangling CNAME."""
         scan_id = "test-scan-123"
@@ -66,7 +66,7 @@ class TestDanglingDNSDetector:
 
     @pytest.mark.asyncio
     async def test_detect_no_dangling_cname(
-        self, detector: DanglingDNSDetector, mock_dns_scanner: DNSScanner
+        self, detector: DanglingDNSDetector, mock_dns_scanner: MagicMock
     ) -> None:
         """Test detection when CNAME is not dangling."""
         dns_records = [
@@ -91,7 +91,7 @@ class TestDanglingDNSDetector:
 
     @pytest.mark.asyncio
     async def test_detect_nxdomain_a_record(
-        self, detector: DanglingDNSDetector, mock_dns_scanner: DNSScanner
+        self, detector: DanglingDNSDetector, mock_dns_scanner: MagicMock
     ) -> None:
         """Test detection of NXDOMAIN for A records."""
         dns_records = [
@@ -128,7 +128,7 @@ class TestDanglingDNSDetector:
 
     @pytest.mark.asyncio
     async def test_detect_no_cname_records(
-        self, detector: DanglingDNSDetector, mock_dns_scanner: DNSScanner
+        self, detector: DanglingDNSDetector, mock_dns_scanner: MagicMock
     ) -> None:
         """Test detection when there are no CNAME records."""
         dns_records = [
@@ -243,7 +243,7 @@ class TestPatternMatcher:
     def test_load_patterns(self, matcher: PatternMatcher) -> None:
         """Test that patterns are loaded successfully."""
         # Check that at least some platforms are loaded
-        assert len(matcher.platforms) >= 8
+        assert len(matcher.patterns) >= 8
 
         # Check that Heroku pattern is present
         heroku = matcher.match_cname("app.herokuapp.com")
@@ -254,14 +254,14 @@ class TestTakeoverDetector:
     """Test takeover detector."""
 
     @pytest.fixture
-    def mock_dns_scanner(self) -> DNSScanner:
+    def mock_dns_scanner(self) -> MagicMock:
         """Create mock DNS scanner."""
         scanner = MagicMock(spec=DNSScanner)
         scanner.resolve = AsyncMock()
         return scanner
 
     @pytest.fixture
-    def mock_http_client(self) -> HTTPClient:
+    def mock_http_client(self) -> MagicMock:
         """Create mock HTTP client."""
         client = MagicMock(spec=HTTPClient)
         client.fetch_text = AsyncMock()
@@ -269,7 +269,7 @@ class TestTakeoverDetector:
 
     @pytest.fixture
     def detector(
-        self, mock_dns_scanner: DNSScanner, mock_http_client: HTTPClient
+        self, mock_dns_scanner: MagicMock, mock_http_client: MagicMock
     ) -> TakeoverDetector:
         """Create takeover detector instance."""
         return TakeoverDetector(
@@ -279,7 +279,7 @@ class TestTakeoverDetector:
 
     @pytest.mark.asyncio
     async def test_detect_heroku_takeover(
-        self, detector: TakeoverDetector, mock_dns_scanner: DNSScanner, mock_http_client: HTTPClient
+        self, detector: TakeoverDetector, mock_dns_scanner: MagicMock, mock_http_client: MagicMock
     ) -> None:
         """Test detection of Heroku subdomain takeover."""
         scan_id = "test-scan-123"
@@ -325,7 +325,7 @@ class TestTakeoverDetector:
 
     @pytest.mark.asyncio
     async def test_detect_github_pages_takeover(
-        self, detector: TakeoverDetector, mock_dns_scanner: DNSScanner, mock_http_client: HTTPClient
+        self, detector: TakeoverDetector, mock_dns_scanner: MagicMock, mock_http_client: MagicMock
     ) -> None:
         """Test detection of GitHub Pages subdomain takeover."""
         domain = "docs.example.com"
@@ -362,7 +362,7 @@ class TestTakeoverDetector:
 
     @pytest.mark.asyncio
     async def test_detect_no_platform_match(
-        self, detector: TakeoverDetector, mock_dns_scanner: DNSScanner
+        self, detector: TakeoverDetector, mock_dns_scanner: MagicMock
     ) -> None:
         """Test detection when CNAME doesn't match any platform."""
         dns_records = [
@@ -385,7 +385,7 @@ class TestTakeoverDetector:
 
     @pytest.mark.asyncio
     async def test_detect_target_resolves(
-        self, detector: TakeoverDetector, mock_dns_scanner: DNSScanner, mock_http_client: HTTPClient
+        self, detector: TakeoverDetector, mock_dns_scanner: MagicMock, mock_http_client: MagicMock
     ) -> None:
         """Test detection when CNAME target resolves (no takeover)."""
         dns_records = [
@@ -418,7 +418,7 @@ class TestTakeoverDetector:
 
     @pytest.mark.asyncio
     async def test_detect_http_verification_fails(
-        self, detector: TakeoverDetector, mock_dns_scanner: DNSScanner, mock_http_client: HTTPClient
+        self, detector: TakeoverDetector, mock_dns_scanner: MagicMock, mock_http_client: MagicMock
     ) -> None:
         """Test detection when HTTP verification doesn't match."""
         dns_records = [

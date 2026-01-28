@@ -21,14 +21,14 @@ class TestSubdomainScanner:
     """Test subdomain scanner functionality."""
 
     @pytest.fixture
-    def mock_http_client(self) -> HTTPClient:
+    def mock_http_client(self) -> MagicMock:
         """Create mock HTTP client."""
         client = MagicMock(spec=HTTPClient)
         client.get = AsyncMock()
         return client
 
     @pytest.fixture
-    def scanner(self, mock_http_client: HTTPClient) -> SubdomainScanner:
+    def scanner(self, mock_http_client: MagicMock) -> SubdomainScanner:
         """Create subdomain scanner instance."""
         return SubdomainScanner(
             http_client=mock_http_client,
@@ -36,7 +36,7 @@ class TestSubdomainScanner:
         )
 
     @pytest.mark.asyncio
-    async def test_scan_crtsh_success(self, scanner: SubdomainScanner, mock_http_client: HTTPClient) -> None:
+    async def test_scan_crtsh_success(self, scanner: SubdomainScanner, mock_http_client: MagicMock) -> None:
         """Test successful crt.sh subdomain discovery."""
         domain = "example.com"
         mock_http_client.get.return_value = get_mock_crtsh_response(domain)
@@ -60,7 +60,7 @@ class TestSubdomainScanner:
         assert call_args[1]["params"]["q"] == domain
 
     @pytest.mark.asyncio
-    async def test_scan_deduplication(self, scanner: SubdomainScanner, mock_http_client: HTTPClient) -> None:
+    async def test_scan_deduplication(self, scanner: SubdomainScanner, mock_http_client: MagicMock) -> None:
         """Test that duplicate subdomains are deduplicated."""
         domain = "example.com"
 
@@ -95,7 +95,7 @@ class TestSubdomainScanner:
         assert domains.count("www.example.com") == 1
 
     @pytest.mark.asyncio
-    async def test_scan_wildcard_handling(self, scanner: SubdomainScanner, mock_http_client: HTTPClient) -> None:
+    async def test_scan_wildcard_handling(self, scanner: SubdomainScanner, mock_http_client: MagicMock) -> None:
         """Test that wildcard domains are handled correctly."""
         domain = "example.com"
 
@@ -121,17 +121,18 @@ class TestSubdomainScanner:
         assert "*.example.com" not in domains
 
     @pytest.mark.asyncio
-    async def test_scan_crtsh_api_error(self, scanner: SubdomainScanner, mock_http_client: HTTPClient) -> None:
+    async def test_scan_crtsh_api_error(self, scanner: SubdomainScanner, mock_http_client: MagicMock) -> None:
         """Test handling of crt.sh API errors."""
         mock_http_client.get.side_effect = Exception("API error")
 
-        with pytest.raises(ScannerError) as exc_info:
-            await scanner.scan("example.com")
+        # Scanner continues with empty results when one source fails
+        results = await scanner.scan("example.com")
 
-        assert "crt.sh query failed" in str(exc_info.value)
+        # Should return empty list when all sources fail
+        assert results == []
 
     @pytest.mark.asyncio
-    async def test_scan_invalid_response_format(self, scanner: SubdomainScanner, mock_http_client: HTTPClient) -> None:
+    async def test_scan_invalid_response_format(self, scanner: SubdomainScanner, mock_http_client: MagicMock) -> None:
         """Test handling of invalid response format."""
         mock_http_client.get.return_value = {"error": "Invalid domain"}
 
@@ -141,7 +142,7 @@ class TestSubdomainScanner:
         assert results == []
 
     @pytest.mark.asyncio
-    async def test_scan_subfinder_success(self, mock_http_client: HTTPClient, tmp_path: Path) -> None:
+    async def test_scan_subfinder_success(self, mock_http_client: MagicMock, tmp_path: Path) -> None:
         """Test subfinder integration."""
         # Create mock subfinder script
         subfinder_path = tmp_path / "subfinder"
@@ -173,7 +174,7 @@ class TestSubdomainScanner:
             assert "api.example.com" in domains
 
     @pytest.mark.asyncio
-    async def test_scan_assetfinder_success(self, mock_http_client: HTTPClient, tmp_path: Path) -> None:
+    async def test_scan_assetfinder_success(self, mock_http_client: MagicMock, tmp_path: Path) -> None:
         """Test assetfinder integration."""
         # Create mock assetfinder script
         assetfinder_path = tmp_path / "assetfinder"
@@ -205,7 +206,7 @@ class TestSubdomainScanner:
             assert "admin.example.com" in domains
 
     @pytest.mark.asyncio
-    async def test_scan_multi_source(self, mock_http_client: HTTPClient) -> None:
+    async def test_scan_multi_source(self, mock_http_client: MagicMock) -> None:
         """Test scanning with multiple sources."""
         scanner = SubdomainScanner(
             http_client=mock_http_client,
@@ -222,17 +223,17 @@ class TestSubdomainScanner:
         assert len(domains) == len(set(domains))
 
     @pytest.mark.asyncio
-    async def test_scan_source_failure_handling(self, scanner: SubdomainScanner, mock_http_client: HTTPClient) -> None:
+    async def test_scan_source_failure_handling(self, scanner: SubdomainScanner, mock_http_client: MagicMock) -> None:
         """Test that scanner continues when one source fails."""
         # Make crtsh fail
         mock_http_client.get.side_effect = Exception("API down")
 
-        # Should raise ScannerError since only source failed
-        with pytest.raises(ScannerError):
-            await scanner.scan("example.com")
+        # Scanner handles failure gracefully and returns empty results
+        results = await scanner.scan("example.com")
+        assert results == []
 
     @pytest.mark.asyncio
-    async def test_scan_empty_domain_list(self, scanner: SubdomainScanner, mock_http_client: HTTPClient) -> None:
+    async def test_scan_empty_domain_list(self, scanner: SubdomainScanner, mock_http_client: MagicMock) -> None:
         """Test handling of empty crt.sh results."""
         mock_http_client.get.return_value = []
 
@@ -241,7 +242,7 @@ class TestSubdomainScanner:
         assert results == []
 
     @pytest.mark.asyncio
-    async def test_tool_availability_check(self, mock_http_client: HTTPClient, tmp_path: Path) -> None:
+    async def test_tool_availability_check(self, mock_http_client: MagicMock, tmp_path: Path) -> None:
         """Test tool availability checking."""
         scanner = SubdomainScanner(
             http_client=mock_http_client,

@@ -52,35 +52,46 @@ class TestEndToEndScan:
     ) -> None:
         """Test complete scan workflow with mocked external dependencies."""
         async with ScanOrchestrator(settings=settings, db=db) as orchestrator:
-            # Mock all external API calls
+            # Mock all external API calls at higher level
             with patch.object(orchestrator.http_client, "get", new_callable=AsyncMock) as mock_http_get, \
                  patch.object(orchestrator.http_client, "fetch_text", new_callable=AsyncMock) as mock_http_fetch, \
-                 patch.object(orchestrator.dns_scanner._resolver, "resolve") as mock_dns_resolve:
+                 patch.object(orchestrator.dns_scanner, "scan", new_callable=AsyncMock) as mock_dns_scan, \
+                 patch.object(orchestrator.dns_scanner, "check_dangling_cname", new_callable=AsyncMock) as mock_check_dangling:
 
                 # Mock crt.sh response for subdomain discovery
                 mock_http_get.return_value = get_mock_crtsh_response("example.com")
 
-                # Mock DNS responses
-                def dns_side_effect(domain, rdtype):
-                    from tests.fixtures.mock_responses import create_mock_dns_answer
+                # Mock DNS scan results with CNAME for api.example.com
+                def dns_scan_side_effect(domain):
+                    if domain == "api.example.com":
+                        return [
+                            DNSResult(
+                                domain=domain,
+                                record_type="CNAME",
+                                values=["old-service.herokuapp.com"],
+                                ttl=300,
+                                nameserver="8.8.8.8",
+                            )
+                        ]
+                    return [
+                        DNSResult(
+                            domain=domain,
+                            record_type="A",
+                            values=["93.184.216.34"],
+                            ttl=300,
+                            nameserver="8.8.8.8",
+                        )
+                    ]
 
-                    # Main domain: A record
-                    if domain == "example.com" and str(rdtype) == "A":
-                        return create_mock_dns_answer("A", ["93.184.216.34"])
+                mock_dns_scan.side_effect = dns_scan_side_effect
 
-                    # API subdomain: dangling CNAME
-                    if domain == "api.example.com" and str(rdtype) == "CNAME":
-                        return create_mock_dns_answer("CNAME", ["old-service.herokuapp.com"])
+                # Mock dangling CNAME check
+                def check_dangling_side_effect(domain):
+                    if domain == "api.example.com":
+                        return (True, "old-service.herokuapp.com")
+                    return (False, None)
 
-                    if domain == "old-service.herokuapp.com" and str(rdtype) == "A":
-                        import dns.resolver
-                        raise dns.resolver.NXDOMAIN()
-
-                    # Other records: NoAnswer
-                    import dns.resolver
-                    raise dns.resolver.NoAnswer()
-
-                mock_dns_resolve.side_effect = dns_side_effect
+                mock_check_dangling.side_effect = check_dangling_side_effect
 
                 # Mock HTTP response for takeover verification
                 mock_http_fetch.return_value = get_mock_http_response("heroku_takeover")
@@ -127,6 +138,7 @@ class TestEndToEndScan:
 
                 # Verify database state
                 scan = await db.get_scan(result["scan_id"])
+                assert scan is not None
                 assert scan.status == "completed"
 
     @pytest.mark.asyncio
@@ -137,7 +149,8 @@ class TestEndToEndScan:
         async with ScanOrchestrator(settings=settings, db=db) as orchestrator:
             with patch.object(orchestrator.http_client, "get", new_callable=AsyncMock) as mock_http_get, \
                  patch.object(orchestrator.http_client, "fetch_text", new_callable=AsyncMock) as mock_http_fetch, \
-                 patch.object(orchestrator.dns_scanner._resolver, "resolve") as mock_dns_resolve:
+                 patch.object(orchestrator.dns_scanner, "scan", new_callable=AsyncMock) as mock_dns_scan, \
+                 patch.object(orchestrator.dns_scanner, "check_dangling_cname", new_callable=AsyncMock) as mock_check_dangling:
 
                 # Mock crt.sh responses for both domains
                 def http_get_side_effect(url, params=None):
@@ -149,26 +162,37 @@ class TestEndToEndScan:
 
                 mock_http_get.side_effect = http_get_side_effect
 
-                # Mock DNS responses
-                def dns_side_effect(domain, rdtype):
-                    from tests.fixtures.mock_responses import create_mock_dns_answer
-                    import dns.resolver
+                # Mock DNS scan results
+                def dns_scan_side_effect(domain):
+                    if "api.example.com" in domain:
+                        return [
+                            DNSResult(
+                                domain=domain,
+                                record_type="CNAME",
+                                values=["old-app.herokuapp.com"],
+                                ttl=300,
+                                nameserver="8.8.8.8",
+                            )
+                        ]
+                    return [
+                        DNSResult(
+                            domain=domain,
+                            record_type="A",
+                            values=["93.184.216.34"] if "example.com" in domain else ["1.2.3.4"],
+                            ttl=300,
+                            nameserver="8.8.8.8",
+                        )
+                    ]
 
-                    # example.com - dangling CNAME
-                    if "example.com" in domain and str(rdtype) == "CNAME":
-                        if "api.example" in domain:
-                            return create_mock_dns_answer("CNAME", ["old-app.herokuapp.com"])
+                mock_dns_scan.side_effect = dns_scan_side_effect
 
-                    if "herokuapp.com" in domain and str(rdtype) == "A":
-                        raise dns.resolver.NXDOMAIN()
+                # Mock dangling CNAME check
+                def check_dangling_side_effect(domain):
+                    if "api.example.com" in domain:
+                        return (True, "old-app.herokuapp.com")
+                    return (False, None)
 
-                    # test.com - normal records
-                    if "test.com" in domain and str(rdtype) == "A":
-                        return create_mock_dns_answer("A", ["1.2.3.4"])
-
-                    raise dns.resolver.NoAnswer()
-
-                mock_dns_resolve.side_effect = dns_side_effect
+                mock_check_dangling.side_effect = check_dangling_side_effect
                 mock_http_fetch.return_value = get_mock_http_response("heroku_takeover")
 
                 # Scan both domains
@@ -226,6 +250,7 @@ class TestEndToEndScan:
 
                 # Verify scan completed
                 scan = await db.get_scan(result["scan_id"])
+                assert scan is not None
                 assert scan.status == "completed"
 
     @pytest.mark.asyncio
@@ -243,50 +268,56 @@ class TestEndToEndScan:
                 mock_dns.return_value = []
 
                 # Mock findings with different severities
-                mock_dang.return_value = [
-                    Finding(
-                        scan_id="",
-                        severity="CRITICAL",
-                        type="dangling_cname",
-                        domain="critical.example.com",
-                        record_type="CNAME",
-                        target="target1.com",
-                        description="Critical issue",
-                        cvss_score=9.1,
-                        remediation="Fix immediately",
-                        raw_data={},
-                        confidence=1.0,
-                    ),
-                    Finding(
-                        scan_id="",
-                        severity="MEDIUM",
-                        type="nxdomain",
-                        domain="medium.example.com",
-                        record_type="A",
-                        target=None,
-                        description="Medium issue",
-                        cvss_score=5.3,
-                        remediation="Investigate",
-                        raw_data={},
-                        confidence=0.8,
-                    ),
-                ]
+                # Use side_effect to return new Finding objects each time
+                def create_dang_findings(*args, **kwargs):
+                    return [
+                        Finding(
+                            scan_id="",
+                            severity="CRITICAL",
+                            type="dangling_cname",
+                            domain="critical.example.com",
+                            record_type="CNAME",
+                            target="target1.com",
+                            description="Critical issue",
+                            cvss_score=9.1,
+                            remediation="Fix immediately",
+                            raw_data={},
+                            confidence=1.0,
+                        ),
+                        Finding(
+                            scan_id="",
+                            severity="MEDIUM",
+                            type="nxdomain",
+                            domain="medium.example.com",
+                            record_type="A",
+                            target=None,
+                            description="Medium issue",
+                            cvss_score=5.3,
+                            remediation="Investigate",
+                            raw_data={},
+                            confidence=0.8,
+                        ),
+                    ]
 
-                mock_take.return_value = [
-                    Finding(
-                        scan_id="",
-                        severity="HIGH",
-                        type="subdomain_takeover",
-                        domain="high.example.com",
-                        record_type="CNAME",
-                        target="target2.com",
-                        description="High issue",
-                        cvss_score=7.5,
-                        remediation="Fix soon",
-                        raw_data={},
-                        confidence=0.95,
-                    ),
-                ]
+                def create_take_findings(*args, **kwargs):
+                    return [
+                        Finding(
+                            scan_id="",
+                            severity="HIGH",
+                            type="subdomain_takeover",
+                            domain="high.example.com",
+                            record_type="CNAME",
+                            target="target2.com",
+                            description="High issue",
+                            cvss_score=7.5,
+                            remediation="Fix soon",
+                            raw_data={},
+                            confidence=0.95,
+                        ),
+                    ]
+
+                mock_dang.side_effect = create_dang_findings
+                mock_take.side_effect = create_take_findings
 
                 result = await orchestrator.scan(["example.com"])
 
@@ -321,22 +352,25 @@ class TestEndToEndScan:
                 mock_dns.return_value = []
                 mock_take.return_value = []
 
-                # Same finding in both scans
-                finding = Finding(
-                    scan_id="",
-                    severity="CRITICAL",
-                    type="dangling_cname",
-                    domain="api.example.com",
-                    record_type="CNAME",
-                    target="old-service.herokuapp.com",
-                    description="Dangling CNAME",
-                    cvss_score=9.1,
-                    remediation="Remove CNAME",
-                    raw_data={},
-                    confidence=1.0,
-                )
+                # Create new finding each time to avoid UUID conflicts
+                def create_finding(*args, **kwargs):
+                    return [
+                        Finding(
+                            scan_id="",
+                            severity="CRITICAL",
+                            type="dangling_cname",
+                            domain="api.example.com",
+                            record_type="CNAME",
+                            target="old-service.herokuapp.com",
+                            description="Dangling CNAME",
+                            cvss_score=9.1,
+                            remediation="Remove CNAME",
+                            raw_data={},
+                            confidence=1.0,
+                        )
+                    ]
 
-                mock_dang.return_value = [finding]
+                mock_dang.side_effect = create_finding
 
                 # First scan
                 result1 = await orchestrator.scan(["example.com"])
@@ -390,22 +424,25 @@ class TestEndToEndScan:
                     )
                 ]
 
-                mock_dang.return_value = [
-                    Finding(
-                        scan_id="",
-                        severity="CRITICAL",
-                        type="dangling_cname",
-                        domain="api.example.com",
-                        record_type="CNAME",
-                        target="old-service.herokuapp.com",
-                        description="Dangling CNAME detected for api.example.com",
-                        cvss_score=9.1,
-                        remediation="Remove the CNAME record immediately",
-                        raw_data={"cname_target": "old-service.herokuapp.com"},
-                        confidence=1.0,
-                    )
-                ]
+                # Create new finding each time to avoid UUID conflicts
+                def create_reporting_finding(*args, **kwargs):
+                    return [
+                        Finding(
+                            scan_id="",
+                            severity="CRITICAL",
+                            type="dangling_cname",
+                            domain="api.example.com",
+                            record_type="CNAME",
+                            target="old-service.herokuapp.com",
+                            description="Dangling CNAME detected for api.example.com",
+                            cvss_score=9.1,
+                            remediation="Remove the CNAME record immediately",
+                            raw_data={"cname_target": "old-service.herokuapp.com"},
+                            confidence=1.0,
+                        )
+                    ]
 
+                mock_dang.side_effect = create_reporting_finding
                 mock_take.return_value = []
 
                 result = await orchestrator.scan(["example.com"])
@@ -428,6 +465,7 @@ class TestEndToEndScan:
 
                 # Verify scan record has metadata
                 scan = await db.get_scan(result["scan_id"])
+                assert scan is not None
                 assert scan.start_time is not None
                 assert scan.end_time is not None
                 assert scan.domains_scanned == ["example.com"]

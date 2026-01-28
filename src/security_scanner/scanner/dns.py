@@ -6,6 +6,7 @@ from typing import Optional
 import dns.asyncresolver
 import dns.exception
 import dns.rdatatype
+import dns.resolver
 
 from security_scanner.scanner.models import DNSResult
 from security_scanner.storage.cache import DNSCache
@@ -213,11 +214,8 @@ class DNSScanner:
             )
 
         except dns.exception.Timeout:
-            raise DNSError(
-                f"DNS query timeout for {domain}",
-                domain=domain,
-                query_type=record_type,
-            )
+            # Let timeout propagate to retry handler
+            raise
 
     async def check_dangling_cname(self, domain: str) -> tuple[bool, Optional[str]]:
         """

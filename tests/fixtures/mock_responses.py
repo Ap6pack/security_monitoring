@@ -15,27 +15,27 @@ def get_mock_crtsh_response(domain: str = "example.com") -> list[dict[str, Any]]
             "issuer_name": "Let's Encrypt Authority X3",
             "common_name": f"www.{domain}",
             "name_value": f"www.{domain}\n{domain}\napi.{domain}",
-            "not_before": (now - timedelta(days=30)).isoformat() + "Z",
-            "not_after": (now + timedelta(days=60)).isoformat() + "Z",
-            "entry_timestamp": (now - timedelta(days=30)).isoformat() + "Z",
+            "not_before": (now - timedelta(days=30)).isoformat().replace("+00:00", "Z"),
+            "not_after": (now + timedelta(days=60)).isoformat().replace("+00:00", "Z"),
+            "entry_timestamp": (now - timedelta(days=30)).isoformat().replace("+00:00", "Z"),
         },
         {
             "id": "987654321",
             "issuer_name": "DigiCert Inc",
             "common_name": f"mail.{domain}",
             "name_value": f"mail.{domain}",
-            "not_before": (now - timedelta(days=60)).isoformat() + "Z",
-            "not_after": (now + timedelta(days=30)).isoformat() + "Z",
-            "entry_timestamp": (now - timedelta(days=60)).isoformat() + "Z",
+            "not_before": (now - timedelta(days=60)).isoformat().replace("+00:00", "Z"),
+            "not_after": (now + timedelta(days=30)).isoformat().replace("+00:00", "Z"),
+            "entry_timestamp": (now - timedelta(days=60)).isoformat().replace("+00:00", "Z"),
         },
         {
             "id": "111222333",
             "issuer_name": "Let's Encrypt Authority X3",
             "common_name": f"*.{domain}",
             "name_value": f"*.{domain}",
-            "not_before": (now - timedelta(days=90)).isoformat() + "Z",
-            "not_after": (now + timedelta(days=90)).isoformat() + "Z",
-            "entry_timestamp": (now - timedelta(days=90)).isoformat() + "Z",
+            "not_before": (now - timedelta(days=90)).isoformat().replace("+00:00", "Z"),
+            "not_after": (now + timedelta(days=90)).isoformat().replace("+00:00", "Z"),
+            "entry_timestamp": (now - timedelta(days=90)).isoformat().replace("+00:00", "Z"),
         },
     ]
 
@@ -50,9 +50,9 @@ def get_mock_crtsh_expired_cert(domain: str = "example.com") -> list[dict[str, A
             "issuer_name": "Let's Encrypt Authority X3",
             "common_name": f"old.{domain}",
             "name_value": f"old.{domain}",
-            "not_before": (now - timedelta(days=180)).isoformat() + "Z",
-            "not_after": (now - timedelta(days=30)).isoformat() + "Z",
-            "entry_timestamp": (now - timedelta(days=180)).isoformat() + "Z",
+            "not_before": (now - timedelta(days=180)).isoformat().replace("+00:00", "Z"),
+            "not_after": (now - timedelta(days=30)).isoformat().replace("+00:00", "Z"),
+            "entry_timestamp": (now - timedelta(days=180)).isoformat().replace("+00:00", "Z"),
         },
     ]
 
@@ -67,18 +67,30 @@ def get_mock_crtsh_shared_cert(domain: str = "example.com") -> list[dict[str, An
             "issuer_name": "Let's Encrypt Authority X3",
             "common_name": f"{domain}",
             "name_value": f"{domain}\napi.{domain}\nexternal.otherdomain.com\ntest.anotherdomain.com",
-            "not_before": (now - timedelta(days=15)).isoformat() + "Z",
-            "not_after": (now + timedelta(days=75)).isoformat() + "Z",
-            "entry_timestamp": (now - timedelta(days=15)).isoformat() + "Z",
+            "not_before": (now - timedelta(days=15)).isoformat().replace("+00:00", "Z"),
+            "not_after": (now + timedelta(days=75)).isoformat().replace("+00:00", "Z"),
+            "entry_timestamp": (now - timedelta(days=15)).isoformat().replace("+00:00", "Z"),
         },
     ]
 
 
 # Mock DNS responses
+class MockDNSTarget:
+    """Mock DNS target for CNAME/MX records."""
+
+    def __init__(self, value: str):
+        """Initialize mock target."""
+        self._value = value
+
+    def __str__(self):
+        """String representation with trailing dot."""
+        return self._value + "."
+
+
 class MockDNSAnswer:
     """Mock DNS answer object."""
 
-    def __init__(self, values: list[str], ttl: int = 300):
+    def __init__(self, values: list[Any], ttl: int = 300):
         """Initialize mock DNS answer."""
         self.values = values
         self.rrset = type('obj', (object,), {'ttl': ttl})()
@@ -97,11 +109,12 @@ class MockDNSRdata:
         self.record_type = record_type
 
         if record_type == "CNAME":
-            self.target = type('obj', (object,), {'__str__': lambda: value + "."})()
+            self.target = MockDNSTarget(value)
         elif record_type == "MX":
             parts = value.split()
             self.preference = int(parts[0]) if len(parts) > 1 else 10
-            self.exchange = type('obj', (object,), {'__str__': lambda: parts[1] + "." if len(parts) > 1 else "mail.example.com."})()
+            exchange_value = parts[1] if len(parts) > 1 else "mail.example.com"
+            self.exchange = MockDNSTarget(exchange_value)
 
     def __str__(self):
         """String representation."""

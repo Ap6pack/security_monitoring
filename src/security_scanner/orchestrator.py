@@ -222,6 +222,9 @@ class ScanOrchestrator:
 
         # 4. Store findings in database
         for finding in findings:
+            # Ensure finding has correct scan_id
+            if not finding.scan_id or finding.scan_id == "":
+                finding.scan_id = scan_id
             await self.db.create_finding(finding)
 
         logger.info(
