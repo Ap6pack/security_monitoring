@@ -4,7 +4,7 @@ import asyncio
 import json
 import subprocess
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 from security_scanner.scanner.models import SubdomainResult
 from security_scanner.utils.exceptions import ScannerError
@@ -31,6 +31,7 @@ class SubdomainScanner:
         subfinder_path: Optional[Path] = None,
         assetfinder_path: Optional[Path] = None,
         sources: Optional[list[str]] = None,
+        crtsh_json_file: Optional[Path] = None,
     ) -> None:
         """
         Initialize the subdomain scanner.
@@ -40,11 +41,13 @@ class SubdomainScanner:
             subfinder_path: Path to subfinder binary
             assetfinder_path: Path to assetfinder binary
             sources: List of sources to use (default: all available)
+            crtsh_json_file: Optional path to pre-downloaded crt.sh JSON file (fallback for rate limiting)
         """
         self.http_client = http_client
         self.subfinder_path = subfinder_path
         self.assetfinder_path = assetfinder_path
         self.sources = sources or ["crtsh", "subfinder", "assetfinder"]
+        self.crtsh_json_file = crtsh_json_file
 
     async def scan(self, domain: str) -> list[SubdomainResult]:
         """
@@ -107,51 +110,75 @@ class SubdomainScanner:
         """
         logger.debug("Querying crt.sh", domain=domain)
 
-        url = "https://crt.sh/json"
-        params = {"q": domain}
+        data: list[dict[str, Any]] | None = None
 
-        try:
-            # Add delay to respect rate limits
-            await asyncio.sleep(1.5)
+        # Try to load from file first if provided
+        if self.crtsh_json_file and self.crtsh_json_file.exists():
+            try:
+                logger.info("Loading crt.sh data from file", file=str(self.crtsh_json_file))
+                with open(self.crtsh_json_file, "r", encoding="utf-8") as f:
+                    data = json.load(f)
 
-            data = await self.http_client.get(url, params=params)
+                if not isinstance(data, list):
+                    logger.warning("Invalid crt.sh JSON file format", file=str(self.crtsh_json_file))
+                    data = None
+            except Exception as e:
+                logger.warning(
+                    "Failed to load crt.sh file, falling back to API",
+                    error=str(e),
+                )
+                data = None
 
-            if not isinstance(data, list):  # type: ignore[unreachable]
-                return []
+        # Fall back to API request if no file data
+        if data is None:
+            url = "https://crt.sh/json"
+            params = {"q": domain}
 
-            subdomains: set[str] = set()  # type: ignore[unreachable]
-            results: list[SubdomainResult] = []
+            try:
+                # Add delay to respect rate limits
+                await asyncio.sleep(1.5)
 
-            for entry in data:
-                name_value = entry.get("name_value", "")
-                if not name_value:
-                    continue
+                api_response: Any = await self.http_client.get(url, params=params)
 
-                # CT logs can have multiple names separated by newlines
-                names = name_value.split("\n")
-                for name in names:
-                    name = name.strip().lower()
+                if not isinstance(api_response, list):
+                    return []
 
-                    # Skip wildcards for now
-                    if name.startswith("*."):
-                        name = name[2:]
+                data = api_response
 
-                    # Validate domain
-                    if is_valid_domain(name) and name not in subdomains:
-                        subdomains.add(name)
-                        results.append(
-                            SubdomainResult(
-                                domain=name,
-                                source="crtsh",
-                            )
+            except Exception as e:
+                logger.error("crt.sh query failed", domain=domain, error=str(e))
+                raise ScannerError(f"crt.sh query failed: {e}")
+
+        # Parse the data (from file or API)
+        subdomains: set[str] = set()
+        results: list[SubdomainResult] = []
+
+        for entry in data:
+            name_value = entry.get("name_value", "")
+            if not name_value:
+                continue
+
+            # CT logs can have multiple names separated by newlines
+            names = name_value.split("\n")
+            for name in names:
+                name = name.strip().lower()
+
+                # Skip wildcards for now
+                if name.startswith("*."):
+                    name = name[2:]
+
+                # Validate domain
+                if is_valid_domain(name) and name not in subdomains:
+                    subdomains.add(name)
+                    results.append(
+                        SubdomainResult(
+                            domain=name,
+                            source="crtsh",
                         )
+                    )
 
-            logger.debug("crt.sh query complete", domain=domain, count=len(results))
-            return results
-
-        except Exception as e:
-            logger.error("crt.sh query failed", domain=domain, error=str(e))
-            raise ScannerError(f"crt.sh query failed: {e}")
+        logger.debug("crt.sh query complete", domain=domain, count=len(results))
+        return results
 
     async def _scan_subfinder(self, domain: str) -> list[SubdomainResult]:
         """

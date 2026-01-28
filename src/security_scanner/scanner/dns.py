@@ -7,7 +7,6 @@ import dns.asyncresolver
 import dns.exception
 import dns.rdatatype
 import dns.resolver
-
 from security_scanner.scanner.models import DNSResult
 from security_scanner.storage.cache import DNSCache
 from security_scanner.utils.exceptions import DNSError

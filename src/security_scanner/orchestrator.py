@@ -77,10 +77,12 @@ class ScanOrchestrator:
             subfinder_path=settings.subfinder_path,
             assetfinder_path=settings.assetfinder_path,
             sources=settings.subdomain_sources,
+            crtsh_json_file=settings.certificate_json_file,
         )
 
         self.certificate_scanner = CertificateScanner(
             http_client=self.http_client,
+            json_file=settings.certificate_json_file,
         )
 
         # Initialize detectors

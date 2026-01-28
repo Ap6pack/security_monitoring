@@ -86,6 +86,10 @@ class Settings(BaseSettings):
         default=True,
         description="Enable certificate transparency monitoring",
     )
+    certificate_json_file: Path | None = Field(
+        default=None,
+        description="Path to pre-downloaded crt.sh JSON file (fallback for rate limiting)",
+    )
 
     # External Tools
     subfinder_path: Path = Field(

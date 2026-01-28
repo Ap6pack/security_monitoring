@@ -1,7 +1,9 @@
 """Certificate transparency scanner."""
 
 import asyncio
+import json
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any, Optional
 
 from security_scanner.scanner.models import CertificateResult
@@ -24,14 +26,20 @@ class CertificateScanner:
     - Wildcard certificates
     """
 
-    def __init__(self, http_client: HTTPClient) -> None:
+    def __init__(
+        self,
+        http_client: HTTPClient,
+        json_file: Path | None = None,
+    ) -> None:
         """
         Initialize the certificate scanner.
 
         Args:
             http_client: HTTP client for API requests
+            json_file: Optional path to pre-downloaded crt.sh JSON file (fallback for rate limiting)
         """
         self.http_client = http_client
+        self.json_file = json_file
 
     async def scan(self, domain: str) -> list[CertificateResult]:
         """
@@ -46,6 +54,30 @@ class CertificateScanner:
         domain = normalize_domain(domain)
         logger.info("Starting certificate transparency scan", domain=domain)
 
+        # Try to load from file first if provided
+        if self.json_file and self.json_file.exists():
+            try:
+                logger.info("Loading certificate data from file", file=str(self.json_file))
+                with open(self.json_file, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+
+                if not isinstance(data, list):
+                    logger.warning("Invalid JSON file format", file=str(self.json_file))
+                else:
+                    certificates = self._parse_certificates(data, domain)
+                    logger.info(
+                        "Certificate scan complete (from file)",
+                        domain=domain,
+                        count=len(certificates),
+                    )
+                    return certificates
+            except Exception as e:
+                logger.warning(
+                    "Failed to load certificate file, falling back to API",
+                    error=str(e),
+                )
+
+        # Fall back to API request
         # Add delay to respect rate limits
         await asyncio.sleep(1.5)
 
