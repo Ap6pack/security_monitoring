@@ -37,14 +37,14 @@ class DatabaseManager:
     - Transaction management
     """
 
-    def __init__(self, db_path: Path) -> None:
+    def __init__(self, db_path: Path | str) -> None:
         """
         Initialize the database manager.
 
         Args:
-            db_path: Path to the SQLite database file
+            db_path: Path to the SQLite database file (Path object or string)
         """
-        self.db_path = db_path
+        self.db_path = Path(db_path) if isinstance(db_path, str) else db_path
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
 
     async def initialize(self) -> None:
