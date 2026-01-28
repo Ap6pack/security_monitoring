@@ -1,7 +1,7 @@
 """Async SQLite database manager."""
 
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Optional
 
@@ -17,6 +17,13 @@ from security_scanner.utils.exceptions import DatabaseError
 from security_scanner.utils.logger import get_logger
 
 logger = get_logger(__name__)
+
+
+def _ensure_utc(dt: datetime) -> datetime:
+    """Ensure datetime is timezone-aware (UTC)."""
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=timezone.utc)
+    return dt
 
 
 class DatabaseManager:
@@ -206,7 +213,7 @@ class DatabaseManager:
             )
             row = await cursor.fetchone()
             if row:
-                start_time = datetime.fromisoformat(row[0])
+                start_time = _ensure_utc(datetime.fromisoformat(row[0]))
                 duration = int((end_time - start_time).total_seconds())
             else:
                 duration = 0
@@ -328,8 +335,8 @@ class DatabaseManager:
                     cvss_score=row["cvss_score"],
                     remediation=row["remediation"],
                     raw_data=json.loads(row["raw_data"]),
-                    detected_at=datetime.fromisoformat(row["detected_at"]),
-                    first_seen=datetime.fromisoformat(row["first_seen"]),
+                    detected_at=_ensure_utc(datetime.fromisoformat(row["detected_at"])),
+                    first_seen=_ensure_utc(datetime.fromisoformat(row["first_seen"])),
                     alerted=bool(row["alerted"]),
                     platform=row["platform"],
                     confidence=row["confidence"],
@@ -410,8 +417,8 @@ class DatabaseManager:
 
         return Scan(
             id=row["id"],
-            start_time=datetime.fromisoformat(row["start_time"]),
-            end_time=(datetime.fromisoformat(row["end_time"]) if row["end_time"] else None),
+            start_time=_ensure_utc(datetime.fromisoformat(row["start_time"])),
+            end_time=(_ensure_utc(datetime.fromisoformat(row["end_time"])) if row["end_time"] else None),
             duration_seconds=row["duration_seconds"],
             domains_scanned=json.loads(row["domains_scanned"]),
             status=row["status"],
@@ -448,8 +455,8 @@ class DatabaseManager:
                     cvss_score=row["cvss_score"],
                     remediation=row["remediation"],
                     raw_data=json.loads(row["raw_data"]),
-                    detected_at=datetime.fromisoformat(row["detected_at"]),
-                    first_seen=datetime.fromisoformat(row["first_seen"]),
+                    detected_at=_ensure_utc(datetime.fromisoformat(row["detected_at"])),
+                    first_seen=_ensure_utc(datetime.fromisoformat(row["first_seen"])),
                     alerted=bool(row["alerted"]),
                     platform=row["platform"],
                     confidence=row["confidence"],
@@ -473,8 +480,8 @@ class DatabaseManager:
             scans.append(
                 Scan(
                     id=row["id"],
-                    start_time=datetime.fromisoformat(row["start_time"]),
-                    end_time=(datetime.fromisoformat(row["end_time"]) if row["end_time"] else None),
+                    start_time=_ensure_utc(datetime.fromisoformat(row["start_time"])),
+                    end_time=(_ensure_utc(datetime.fromisoformat(row["end_time"])) if row["end_time"] else None),
                     duration_seconds=row["duration_seconds"],
                     domains_scanned=json.loads(row["domains_scanned"]),
                     status=row["status"],

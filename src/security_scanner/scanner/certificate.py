@@ -1,7 +1,7 @@
 """Certificate transparency scanner."""
 
 import asyncio
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Optional
 
 from security_scanner.scanner.models import CertificateResult
@@ -89,7 +89,7 @@ class CertificateScanner:
             List of parsed certificate results
         """
         certificates: dict[str, CertificateResult] = {}
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
 
         for entry in data:
             try:
@@ -206,7 +206,7 @@ class CertificateScanner:
         Returns:
             List of recently issued certificates
         """
-        cutoff = datetime.utcnow()
+        cutoff = datetime.now(timezone.utc)
         from datetime import timedelta
 
         cutoff = cutoff - timedelta(days=days)
@@ -230,7 +230,7 @@ class CertificateScanner:
         Returns:
             List of certificates expiring soon
         """
-        cutoff = datetime.utcnow()
+        cutoff = datetime.now(timezone.utc)
         from datetime import timedelta
 
         cutoff = cutoff + timedelta(days=days)
