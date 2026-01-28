@@ -25,7 +25,9 @@ class Settings(BaseSettings):
 
     # Logging
     log_level: str = Field(default="INFO", description="Logging level")
-    log_file: Path | None = Field(default=Path("logs/security_scanner.log"), description="Log file path")
+    log_file: Path | None = Field(
+        default=Path("logs/security_scanner.log"), description="Log file path"
+    )
     log_format: Literal["json", "console"] = Field(
         default="console",
         description="Log output format",
@@ -40,7 +42,9 @@ class Settings(BaseSettings):
     dns_max_retries: int = Field(default=3, ge=0, le=10, description="Maximum DNS retry attempts")
 
     # HTTP Client
-    http_timeout: int = Field(default=10, ge=1, le=60, description="HTTP request timeout in seconds")
+    http_timeout: int = Field(
+        default=10, ge=1, le=60, description="HTTP request timeout in seconds"
+    )
     http_max_retries: int = Field(default=3, ge=0, le=10, description="Maximum HTTP retry attempts")
     http_max_connections: int = Field(
         default=100,

@@ -88,7 +88,7 @@ class HTTPClient:
             # Wait for connections to close properly
             await asyncio.sleep(0.25)
 
-    async def get(
+    async def get(  # type: ignore[return]
         self,
         url: str,
         params: Optional[dict[str, Any]] = None,
@@ -125,7 +125,7 @@ class HTTPClient:
                     headers=headers,
                 ) as response:
                     response.raise_for_status()
-                    return await response.json()
+                    return await response.json()  # type: ignore[no-any-return]
             except aiohttp.ClientResponseError as e:
                 logger.warning(
                     "HTTP request failed",
@@ -156,10 +156,10 @@ class HTTPClient:
                 with attempt:
                     return await _make_request()
         except Exception:
-            # Should never reach here due to reraise=True, but for type checking
+            # Should never reach here due to reraise=True
             raise
 
-    async def post(
+    async def post(  # type: ignore[return]
         self,
         url: str,
         data: Optional[dict[str, Any]] = None,
@@ -199,7 +199,7 @@ class HTTPClient:
                     headers=headers,
                 ) as response:
                     response.raise_for_status()
-                    return await response.json()
+                    return await response.json()  # type: ignore[no-any-return]
             except aiohttp.ClientResponseError as e:
                 logger.warning(
                     "HTTP POST failed",
@@ -232,7 +232,7 @@ class HTTPClient:
         except Exception:
             raise
 
-    async def fetch_text(
+    async def fetch_text(  # type: ignore[return]
         self,
         url: str,
         headers: Optional[dict[str, str]] = None,

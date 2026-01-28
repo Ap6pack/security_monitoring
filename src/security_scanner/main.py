@@ -10,7 +10,7 @@ from rich.console import Console
 from rich.table import Table
 
 from security_scanner import __version__
-from security_scanner.config import load_settings
+from security_scanner.config import Settings, load_settings
 from security_scanner.orchestrator import ScanOrchestrator
 from security_scanner.storage.database import DatabaseManager
 from security_scanner.utils.logger import get_logger, setup_logging
@@ -145,7 +145,7 @@ def scan(
         raise typer.Exit(1)
 
 
-async def _run_scan(settings, domains: list[str]) -> None:
+async def _run_scan(settings: Settings, domains: list[str]) -> None:
     """Run the scan asynchronously."""
     # Initialize database
     db = DatabaseManager(settings.database_path)
@@ -161,7 +161,7 @@ async def _run_scan(settings, domains: list[str]) -> None:
         console.print(f"Domains: {', '.join(result['domains'])}\n")
 
         # Summary table
-        summary = result['summary']
+        summary = result["summary"]
         table = Table(title="Findings Summary")
         table.add_column("Severity", style="bold")
         table.add_column("Count", justify="right")
@@ -180,7 +180,7 @@ async def _run_scan(settings, domains: list[str]) -> None:
         console.print(f"\nTotal findings: {len(result['findings'])}\n")
 
         # Show critical findings
-        critical_findings = [f for f in result['findings'] if f.severity == "CRITICAL"]
+        critical_findings = [f for f in result["findings"] if f.severity == "CRITICAL"]
         if critical_findings:
             console.print("[bold red]Critical Findings:[/bold red]\n")
             for finding in critical_findings[:5]:

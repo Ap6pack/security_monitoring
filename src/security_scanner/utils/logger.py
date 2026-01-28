@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 
 import structlog
+from structlog.stdlib import BoundLogger
 from structlog.types import EventDict, Processor
 
 
@@ -15,7 +16,9 @@ def add_app_context(logger: logging.Logger, method_name: str, event_dict: EventD
     return event_dict
 
 
-def drop_color_message_key(logger: logging.Logger, method_name: str, event_dict: EventDict) -> EventDict:
+def drop_color_message_key(
+    logger: logging.Logger, method_name: str, event_dict: EventDict
+) -> EventDict:
     """Remove color-related keys from event dict for JSON output."""
     event_dict.pop("color_message", None)
     return event_dict
@@ -101,7 +104,7 @@ def setup_logging(
     logging.getLogger("urllib3").setLevel(logging.WARNING)
 
 
-def get_logger(name: str | None = None, **initial_values: Any) -> structlog.stdlib.BoundLogger:
+def get_logger(name: str | None = None, **initial_values: Any) -> BoundLogger:
     """
     Get a logger instance with optional initial context values.
 
@@ -112,7 +115,7 @@ def get_logger(name: str | None = None, **initial_values: Any) -> structlog.stdl
     Returns:
         Configured logger instance
     """
-    logger = structlog.get_logger(name)
+    logger: BoundLogger = structlog.get_logger(name)
     if initial_values:
         logger = logger.bind(**initial_values)
     return logger

@@ -1,7 +1,5 @@
 """Unit tests for validators."""
 
-import pytest
-
 from security_scanner.utils.validators import (
     extract_root_domain,
     is_valid_domain,

@@ -120,13 +120,15 @@ security-scanner scan -d example.com -d test.com -d app.example.com
 ### Scan from File
 
 Create a file `domains.txt`:
-```
+
+```text
 example.com
 test.com
 app.example.com
 ```
 
 Then run:
+
 ```bash
 security-scanner scan -f domains.txt
 ```
@@ -242,7 +244,7 @@ make validate
 
 ### Project Structure
 
-```
+```text
 security_monitoring/
 ├── src/security_scanner/      # Main source code
 │   ├── scanner/               # Scanner modules
@@ -319,17 +321,20 @@ $ security-scanner list-scans --limit 5
 
 ### Common Issues
 
-**Database not initialized**
+#### Database not initialized
+
 ```bash
 security-scanner init-db
 ```
 
-**Permission errors**
+#### Permission errors
+
 ```bash
 chmod +x security-scanner
 ```
 
-**Missing dependencies**
+#### Missing dependencies
+
 ```bash
 pip install -r requirements.txt
 ```
@@ -384,6 +389,7 @@ Future enhancements planned:
 ## Acknowledgments
 
 Special thanks to the security research community and the developers of the underlying tools:
+
 - Certificate Transparency project (crt.sh)
 - ProjectDiscovery (subfinder)
 - Tom Hudson (assetfinder)

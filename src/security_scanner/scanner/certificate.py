@@ -2,7 +2,7 @@
 
 import asyncio
 from datetime import datetime
-from typing import Optional
+from typing import Any, Optional
 
 from security_scanner.scanner.models import CertificateResult
 from security_scanner.utils.exceptions import ScannerError
@@ -55,11 +55,11 @@ class CertificateScanner:
         try:
             data = await self.http_client.get(url, params=params)
 
-            if not isinstance(data, list):
+            if not isinstance(data, list):  # type: ignore[unreachable]
                 logger.warning("Unexpected crt.sh response format", domain=domain)
                 return []
 
-            certificates = self._parse_certificates(data, domain)
+            certificates = self._parse_certificates(data, domain)  # type: ignore[unreachable]
 
             logger.info(
                 "Certificate scan complete",
@@ -75,7 +75,7 @@ class CertificateScanner:
 
     def _parse_certificates(
         self,
-        data: list[dict],
+        data: list[dict[str, Any]],
         target_domain: str,
     ) -> list[CertificateResult]:
         """
@@ -114,9 +114,7 @@ class CertificateScanner:
                 # Parse SANs
                 name_value = entry.get("name_value", "")
                 san_domains = [
-                    name.strip().lower()
-                    for name in name_value.split("\n")
-                    if name.strip()
+                    name.strip().lower() for name in name_value.split("\n") if name.strip()
                 ]
 
                 # Remove duplicates
@@ -185,9 +183,7 @@ class CertificateScanner:
             if len(cert.san_domains) > 1:
                 # Check if it includes domains outside the target domain
                 external_domains = [
-                    domain
-                    for domain in cert.san_domains
-                    if not domain.endswith(target_domain)
+                    domain for domain in cert.san_domains if not domain.endswith(target_domain)
                 ]
 
                 if external_domains:
@@ -240,9 +236,7 @@ class CertificateScanner:
         cutoff = cutoff + timedelta(days=days)
 
         expiring = [
-            cert
-            for cert in certificates
-            if not cert.is_expired and cert.not_after <= cutoff
+            cert for cert in certificates if not cert.is_expired and cert.not_after <= cutoff
         ]
 
         return expiring

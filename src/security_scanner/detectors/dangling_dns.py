@@ -130,9 +130,7 @@ class DanglingDNSDetector:
 
         # Find A/AAAA records with errors
         ip_records = [
-            r
-            for r in dns_records
-            if r.record_type in ("A", "AAAA") and r.error and not r.values
+            r for r in dns_records if r.record_type in ("A", "AAAA") and r.error and not r.values
         ]
 
         for ip_record in ip_records:

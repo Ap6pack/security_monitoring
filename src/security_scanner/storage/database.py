@@ -411,9 +411,7 @@ class DatabaseManager:
         return Scan(
             id=row["id"],
             start_time=datetime.fromisoformat(row["start_time"]),
-            end_time=(
-                datetime.fromisoformat(row["end_time"]) if row["end_time"] else None
-            ),
+            end_time=(datetime.fromisoformat(row["end_time"]) if row["end_time"] else None),
             duration_seconds=row["duration_seconds"],
             domains_scanned=json.loads(row["domains_scanned"]),
             status=row["status"],
@@ -476,9 +474,7 @@ class DatabaseManager:
                 Scan(
                     id=row["id"],
                     start_time=datetime.fromisoformat(row["start_time"]),
-                    end_time=(
-                        datetime.fromisoformat(row["end_time"]) if row["end_time"] else None
-                    ),
+                    end_time=(datetime.fromisoformat(row["end_time"]) if row["end_time"] else None),
                     duration_seconds=row["duration_seconds"],
                     domains_scanned=json.loads(row["domains_scanned"]),
                     status=row["status"],

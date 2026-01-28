@@ -1,0 +1,17 @@
+{
+  "pythonVersion": "3.13",
+  "pythonPlatform": "Linux",
+  "venvPath": "/home/localhost/Projects",
+  "venv": "shared_venv",
+  "include": [
+    "src",
+    "tests"
+  ],
+  "extraPaths": [
+    "src"
+  ],
+  "typeCheckingMode": "basic",
+  "reportMissingImports": true,
+  "reportMissingTypeStubs": false,
+  "stubPath": ""
+}

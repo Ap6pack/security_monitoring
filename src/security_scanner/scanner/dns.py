@@ -112,7 +112,7 @@ class DNSScanner:
             cached = self.cache.get(domain, record_type)
             if cached is not None:
                 logger.debug("DNS cache hit", domain=domain, record_type=record_type)
-                return cached
+                return cached  # type: ignore[no-any-return]
 
         async with self._semaphore:
             for attempt in range(self.max_retries):
@@ -176,9 +176,9 @@ class DNSScanner:
                 if record_type in ("A", "AAAA"):
                     values.append(str(rdata))
                 elif record_type == "CNAME":
-                    values.append(str(rdata.target).rstrip("."))
+                    values.append(str(rdata.target).rstrip("."))  # type: ignore[attr-defined]
                 elif record_type == "MX":
-                    values.append(f"{rdata.preference} {str(rdata.exchange).rstrip('.')}")
+                    values.append(f"{rdata.preference} {str(rdata.exchange).rstrip('.')}")  # type: ignore[attr-defined]
                 else:
                     values.append(str(rdata))
 
@@ -186,7 +186,7 @@ class DNSScanner:
                 domain=domain,
                 record_type=record_type,
                 values=values,
-                ttl=int(answer.rrset.ttl) if hasattr(answer, "rrset") else 300,
+                ttl=int(answer.rrset.ttl) if hasattr(answer, "rrset") and answer.rrset else 300,
                 nameserver=self.nameservers[0],
             )
 
@@ -331,9 +331,9 @@ class DNSScanner:
                 if record_type in ("A", "AAAA"):
                     values.append(str(rdata))
                 elif record_type == "CNAME":
-                    values.append(str(rdata.target).rstrip("."))
+                    values.append(str(rdata.target).rstrip("."))  # type: ignore[attr-defined]
                 elif record_type == "MX":
-                    values.append(f"{rdata.preference} {str(rdata.exchange).rstrip('.')}")
+                    values.append(f"{rdata.preference} {str(rdata.exchange).rstrip('.')}")  # type: ignore[attr-defined]
                 else:
                     values.append(str(rdata))
 
@@ -341,7 +341,7 @@ class DNSScanner:
                 domain=domain,
                 record_type=record_type,
                 values=values,
-                ttl=int(answer.rrset.ttl) if hasattr(answer, "rrset") else 300,
+                ttl=int(answer.rrset.ttl) if hasattr(answer, "rrset") and answer.rrset else 300,
                 nameserver=nameserver,
             )
 

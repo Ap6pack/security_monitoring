@@ -82,7 +82,7 @@ class SubdomainScanner:
                 logger.warning("Subdomain source failed", error=str(result))
                 continue
 
-            for subdomain_result in result:
+            for subdomain_result in result:  # type: ignore[union-attr]
                 if subdomain_result.domain not in all_subdomains:
                     all_subdomains.add(subdomain_result.domain)
                     subdomain_results.append(subdomain_result)
@@ -116,10 +116,10 @@ class SubdomainScanner:
 
             data = await self.http_client.get(url, params=params)
 
-            if not isinstance(data, list):
+            if not isinstance(data, list):  # type: ignore[unreachable]
                 return []
 
-            subdomains: set[str] = set()
+            subdomains: set[str] = set()  # type: ignore[unreachable]
             results: list[SubdomainResult] = []
 
             for entry in data:

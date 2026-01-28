@@ -98,11 +98,13 @@ class APIError(NetworkError):
             details: Additional context
         """
         details = details or {}
-        details.update({
-            "api_name": api_name,
-            "status_code": status_code,
-            "response_body": response_body,
-        })
+        details.update(
+            {
+                "api_name": api_name,
+                "status_code": status_code,
+                "response_body": response_body,
+            }
+        )
         super().__init__(message, details)
         self.api_name = api_name
         self.status_code = status_code

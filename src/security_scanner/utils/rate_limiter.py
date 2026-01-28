@@ -29,7 +29,7 @@ class RateLimiter:
         """
         self.rate = rate
         self.burst = burst
-        self.tokens = initial_tokens if initial_tokens is not None else burst
+        self.tokens: float = float(initial_tokens if initial_tokens is not None else burst)
         self.last_update = time.monotonic()
         self._lock = asyncio.Lock()
 

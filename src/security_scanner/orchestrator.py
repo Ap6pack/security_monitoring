@@ -1,9 +1,8 @@
 """Main scan orchestration logic."""
 
 import asyncio
-from datetime import datetime
-from pathlib import Path
-from typing import Any, Optional
+from datetime import datetime, timezone
+from typing import Any
 
 from security_scanner.config import Settings
 from security_scanner.detectors.dangling_dns import DanglingDNSDetector
@@ -56,10 +55,14 @@ class ScanOrchestrator:
             user_agent=settings.http_user_agent,
         )
 
-        self.dns_cache = DNSCache(
-            max_size=settings.cache_max_size,
-            default_ttl=settings.cache_ttl,
-        ) if settings.enable_cache else None
+        self.dns_cache = (
+            DNSCache(
+                max_size=settings.cache_max_size,
+                default_ttl=settings.cache_ttl,
+            )
+            if settings.enable_cache
+            else None
+        )
 
         self.dns_scanner = DNSScanner(
             nameservers=settings.dns_nameservers,
@@ -91,7 +94,6 @@ class ScanOrchestrator:
 
     async def __aenter__(self) -> "ScanOrchestrator":
         """Async context manager entry."""
-        await self.http_client._ensure_session()
         return self
 
     async def __aexit__(self, *args: Any) -> None:
@@ -135,7 +137,7 @@ class ScanOrchestrator:
             findings_by_severity = self._count_findings_by_severity(all_findings)
             await self.db.update_scan(
                 scan_id=scan.id,
-                end_time=datetime.utcnow(),
+                end_time=datetime.now(timezone.utc),
                 status="completed",
                 findings_count=findings_by_severity,
             )
@@ -158,7 +160,7 @@ class ScanOrchestrator:
             logger.error("Scan failed", scan_id=scan.id, error=str(e))
             await self.db.update_scan(
                 scan_id=scan.id,
-                end_time=datetime.utcnow(),
+                end_time=datetime.now(timezone.utc),
                 status="failed",
                 findings_count={},
             )
@@ -199,19 +201,23 @@ class ScanOrchestrator:
             dns_records = dns_results_list[i]
 
             # Run dangling DNS detector
-            dangling_findings = await self.dangling_detector.detect({
-                "domain": subdomain,
-                "dns_records": dns_records,
-                "scan_id": scan_id,
-            })
+            dangling_findings = await self.dangling_detector.detect(
+                {
+                    "domain": subdomain,
+                    "dns_records": dns_records,
+                    "scan_id": scan_id,
+                }
+            )
             findings.extend(dangling_findings)
 
             # Run takeover detector
-            takeover_findings = await self.takeover_detector.detect({
-                "domain": subdomain,
-                "dns_records": dns_records,
-                "scan_id": scan_id,
-            })
+            takeover_findings = await self.takeover_detector.detect(
+                {
+                    "domain": subdomain,
+                    "dns_records": dns_records,
+                    "scan_id": scan_id,
+                }
+            )
             findings.extend(takeover_findings)
 
         # 4. Store findings in database
