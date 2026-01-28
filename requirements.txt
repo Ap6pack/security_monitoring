@@ -1,36 +1,36 @@
 # Core Dependencies
-aiohttp==3.9.3
-aiosqlite==0.19.0
-dnspython==2.4.2
+aiohttp==3.10.11  # Python 3.13 support
+aiosqlite==0.20.0
+dnspython==2.7.0
 python3-resolver==1.0.3
 
 # Configuration & Validation
-pydantic==2.5.3
-pydantic-settings==2.1.0
-pyyaml==6.0.1
+pydantic==2.10.5  # Python 3.13 support with pre-built wheels
+pydantic-settings==2.7.1
+pyyaml==6.0.2
 
 # CLI & Output
-typer==0.9.0
-rich==13.7.0
-jinja2==3.1.3
+typer==0.15.3
+rich==13.9.4
+jinja2==3.1.5
 tabulate==0.9.0
-click==8.1.7  # typer dependency
+click==8.1.8  # typer dependency
 
 # Logging
-structlog==24.1.0
-python-dotenv==1.0.0
+structlog==24.4.0
+python-dotenv==1.0.1
 
 # Retry & Rate Limiting
-tenacity==8.2.3
+tenacity==9.0.0
 
 # Utilities
-validators==0.22.0
-aiofiles==23.2.1
+validators==0.34.0
+aiofiles==24.1.0
 
-# Additional dependencies
-certifi==2023.11.17
-charset-normalizer==3.3.2
-idna==3.6
-multidict==6.0.4
-yarl==1.9.4
-attrs==23.2.0
+# Additional dependencies (Python 3.13 compatible versions)
+certifi==2024.12.14
+charset-normalizer==3.4.1
+idna==3.10
+multidict==6.1.0  # Python 3.13 support
+yarl==1.18.3  # Python 3.13 support
+attrs==24.3.0
