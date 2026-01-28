@@ -20,19 +20,19 @@ class TestCertificateScanner:
     """Test certificate scanner functionality."""
 
     @pytest.fixture
-    def mock_http_client(self) -> HTTPClient:
+    def mock_http_client(self) -> MagicMock:
         """Create mock HTTP client."""
         client = MagicMock(spec=HTTPClient)
         client.get = AsyncMock()
         return client
 
     @pytest.fixture
-    def scanner(self, mock_http_client: HTTPClient) -> CertificateScanner:
+    def scanner(self, mock_http_client: MagicMock) -> CertificateScanner:
         """Create certificate scanner instance."""
         return CertificateScanner(http_client=mock_http_client)
 
     @pytest.mark.asyncio
-    async def test_scan_success(self, scanner: CertificateScanner, mock_http_client: HTTPClient) -> None:
+    async def test_scan_success(self, scanner: CertificateScanner, mock_http_client: MagicMock) -> None:
         """Test successful certificate scan."""
         domain = "example.com"
         mock_http_client.get.return_value = get_mock_crtsh_response(domain)
@@ -49,7 +49,7 @@ class TestCertificateScanner:
         assert call_args[1]["params"]["q"] == domain
 
     @pytest.mark.asyncio
-    async def test_scan_certificate_parsing(self, scanner: CertificateScanner, mock_http_client: HTTPClient) -> None:
+    async def test_scan_certificate_parsing(self, scanner: CertificateScanner, mock_http_client: MagicMock) -> None:
         """Test certificate data parsing."""
         domain = "example.com"
         mock_http_client.get.return_value = get_mock_crtsh_response(domain)
@@ -67,7 +67,7 @@ class TestCertificateScanner:
         assert isinstance(cert.logged_at, datetime)
 
     @pytest.mark.asyncio
-    async def test_scan_wildcard_detection(self, scanner: CertificateScanner, mock_http_client: HTTPClient) -> None:
+    async def test_scan_wildcard_detection(self, scanner: CertificateScanner, mock_http_client: MagicMock) -> None:
         """Test wildcard certificate detection."""
         domain = "example.com"
         mock_http_client.get.return_value = get_mock_crtsh_response(domain)
@@ -80,7 +80,7 @@ class TestCertificateScanner:
         assert any("*." in domain for cert in wildcard_certs for domain in cert.san_domains)
 
     @pytest.mark.asyncio
-    async def test_scan_expired_certificate(self, scanner: CertificateScanner, mock_http_client: HTTPClient) -> None:
+    async def test_scan_expired_certificate(self, scanner: CertificateScanner, mock_http_client: MagicMock) -> None:
         """Test expired certificate detection."""
         domain = "example.com"
         mock_http_client.get.return_value = get_mock_crtsh_expired_cert(domain)
@@ -93,7 +93,7 @@ class TestCertificateScanner:
 
     @pytest.mark.asyncio
     async def test_scan_invalid_response_format(
-        self, scanner: CertificateScanner, mock_http_client: HTTPClient
+        self, scanner: CertificateScanner, mock_http_client: MagicMock
     ) -> None:
         """Test handling of invalid response format."""
         mock_http_client.get.return_value = {"error": "Invalid"}
@@ -104,7 +104,7 @@ class TestCertificateScanner:
         assert results == []
 
     @pytest.mark.asyncio
-    async def test_scan_api_error(self, scanner: CertificateScanner, mock_http_client: HTTPClient) -> None:
+    async def test_scan_api_error(self, scanner: CertificateScanner, mock_http_client: MagicMock) -> None:
         """Test handling of API errors."""
         mock_http_client.get.side_effect = Exception("API down")
 
@@ -114,7 +114,7 @@ class TestCertificateScanner:
         assert "Certificate scan failed" in str(exc_info.value)
 
     @pytest.mark.asyncio
-    async def test_scan_empty_results(self, scanner: CertificateScanner, mock_http_client: HTTPClient) -> None:
+    async def test_scan_empty_results(self, scanner: CertificateScanner, mock_http_client: MagicMock) -> None:
         """Test handling of empty results."""
         mock_http_client.get.return_value = []
 
@@ -124,7 +124,7 @@ class TestCertificateScanner:
 
     @pytest.mark.asyncio
     async def test_parse_certificates_deduplication(
-        self, scanner: CertificateScanner, mock_http_client: HTTPClient
+        self, scanner: CertificateScanner, mock_http_client: MagicMock
     ) -> None:
         """Test that certificates are deduplicated by ID."""
         domain = "example.com"
@@ -279,7 +279,7 @@ class TestCertificateScanner:
 
     @pytest.mark.asyncio
     async def test_scan_san_domains_parsing(
-        self, scanner: CertificateScanner, mock_http_client: HTTPClient
+        self, scanner: CertificateScanner, mock_http_client: MagicMock
     ) -> None:
         """Test parsing of Subject Alternative Names."""
         domain = "example.com"
@@ -308,7 +308,7 @@ class TestCertificateScanner:
 
     @pytest.mark.asyncio
     async def test_scan_malformed_certificate_entry(
-        self, scanner: CertificateScanner, mock_http_client: HTTPClient
+        self, scanner: CertificateScanner, mock_http_client: MagicMock
     ) -> None:
         """Test handling of malformed certificate entries."""
         domain = "example.com"
