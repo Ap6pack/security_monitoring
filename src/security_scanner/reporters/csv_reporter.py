@@ -65,12 +65,15 @@ class CSVReporter:
                 writer.writeheader()
 
                 for finding in findings:
+                    domain = getattr(finding, "domain", "")
+                    finding_type = getattr(finding, "type", "UNKNOWN")
+
                     writer.writerow(
                         {
                             "Severity": getattr(finding, "severity", "UNKNOWN"),
-                            "Type": getattr(finding, "type", "UNKNOWN"),
-                            "Domain": getattr(finding, "domain", ""),
-                            "Title": getattr(finding, "title", ""),
+                            "Type": finding_type,
+                            "Domain": domain,
+                            "Title": self._generate_title(finding_type, domain),
                             "CVSS Score": getattr(finding, "cvss_score", 0.0),
                             "Description": getattr(finding, "description", "")[:200],
                             "Remediation": getattr(finding, "remediation", "")[:200],
@@ -87,3 +90,35 @@ class CSVReporter:
         except Exception as e:
             logger.error("Failed to generate CSV report", error=str(e))
             raise ReporterError(f"CSV report generation failed: {e}") from e
+
+    def _generate_title(self, finding_type: str, domain: str) -> str:
+        """
+        Generate a descriptive title for a finding.
+
+        Args:
+            finding_type: Type of finding
+            domain: Affected domain
+
+        Returns:
+            Descriptive title string
+        """
+        type_titles = {
+            "dangling_cname": "Dangling CNAME Record",
+            "dangling_dns": "Dangling DNS Record",
+            "subdomain_takeover": "Potential Subdomain Takeover",
+            "takeover_heroku": "Heroku Subdomain Takeover Risk",
+            "takeover_github": "GitHub Pages Takeover Risk",
+            "takeover_aws_s3": "AWS S3 Bucket Takeover Risk",
+            "takeover_aws_eb": "AWS Elastic Beanstalk Takeover Risk",
+            "takeover_azure": "Azure Service Takeover Risk",
+            "takeover_gcp": "Google Cloud Platform Takeover Risk",
+            "takeover_netlify": "Netlify Takeover Risk",
+            "takeover_vercel": "Vercel Takeover Risk",
+            "certificate_expiring": "Certificate Expiring Soon",
+            "certificate_expired": "Expired Certificate",
+            "certificate_shared": "Shared Certificate Risk",
+            "dns_misconfiguration": "DNS Misconfiguration",
+        }
+
+        title = type_titles.get(finding_type, finding_type.replace("_", " ").title())
+        return f"{title} - {domain}"

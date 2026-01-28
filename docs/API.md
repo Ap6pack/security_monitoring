@@ -31,6 +31,7 @@ SubdomainScanner(
 ```
 
 **Parameters:**
+
 - `http_client` (HTTPClient): HTTP client for API requests
 - `subfinder_path` (Optional[Path]): Path to subfinder binary
 - `assetfinder_path` (Optional[Path]): Path to assetfinder binary
@@ -43,12 +44,15 @@ SubdomainScanner(
 Scan for subdomains of a target domain.
 
 **Parameters:**
+
 - `domain` (str): Target domain to scan
 
 **Returns:**
+
 - `list[SubdomainResult]`: List of discovered subdomains
 
 **Example:**
+
 ```python
 scanner = SubdomainScanner(http_client=client)
 subdomains = await scanner.scan("example.com")
@@ -63,7 +67,7 @@ for subdomain in subdomains:
 
 Performs DNS resolution with support for multiple record types and nameservers.
 
-#### Constructor
+####
 
 ```python
 DNSScanner(
@@ -74,6 +78,7 @@ DNSScanner(
 ```
 
 **Parameters:**
+
 - `nameservers` (list[str]): List of DNS nameservers to use
 - `timeout` (int): Query timeout in seconds
 - `max_retries` (int): Maximum retry attempts
@@ -85,12 +90,15 @@ DNSScanner(
 Perform comprehensive DNS scan for all record types.
 
 **Parameters:**
+
 - `domain` (str): Domain to scan
 
 **Returns:**
+
 - `list[DNSResult]`: DNS records for A, AAAA, CNAME, MX
 
 **Example:**
+
 ```python
 scanner = DNSScanner(nameservers=["8.8.8.8"])
 records = await scanner.scan("example.com")
@@ -104,11 +112,13 @@ for record in records:
 Resolve specific DNS record type.
 
 **Parameters:**
+
 - `domain` (str): Domain to resolve
 - `record_type` (str): Record type (A, AAAA, CNAME, MX)
 - `use_cache` (bool): Whether to use cached results
 
 **Returns:**
+
 - `DNSResult`: DNS resolution result
 
 ##### `async check_dangling_cname(domain: str) -> tuple[bool, Optional[str]]`
@@ -116,12 +126,15 @@ Resolve specific DNS record type.
 Check if a domain has a dangling CNAME record.
 
 **Parameters:**
+
 - `domain` (str): Domain to check
 
 **Returns:**
+
 - `tuple[bool, Optional[str]]`: (is_dangling, cname_target)
 
 **Example:**
+
 ```python
 is_dangling, target = await scanner.check_dangling_cname("api.example.com")
 if is_dangling:
@@ -141,6 +154,7 @@ CertificateScanner(http_client: HTTPClient)
 ```
 
 **Parameters:**
+
 - `http_client` (HTTPClient): HTTP client for CT log queries
 
 #### Methods
@@ -150,9 +164,11 @@ CertificateScanner(http_client: HTTPClient)
 Scan CT logs for certificates.
 
 **Parameters:**
+
 - `domain` (str): Domain to search
 
 **Returns:**
+
 - `list[CertificateResult]`: List of certificates
 
 ---
@@ -170,6 +186,7 @@ DanglingDNSDetector(dns_scanner: DNSScanner)
 ```
 
 **Parameters:**
+
 - `dns_scanner` (DNSScanner): DNS scanner instance
 
 #### Methods
@@ -179,15 +196,18 @@ DanglingDNSDetector(dns_scanner: DNSScanner)
 Detect dangling DNS records.
 
 **Parameters:**
+
 - `data` (dict): Dictionary with keys:
   - `domain` (str): Target domain
   - `dns_records` (list[DNSResult]): DNS records to analyze
   - `scan_id` (str): Current scan ID
 
 **Returns:**
+
 - `list[Finding]`: List of security findings
 
 **Example:**
+
 ```python
 detector = DanglingDNSDetector(dns_scanner)
 findings = await detector.detect({
@@ -217,6 +237,7 @@ TakeoverDetector(
 ```
 
 **Parameters:**
+
 - `dns_scanner` (DNSScanner): DNS scanner instance
 - `http_client` (HTTPClient): HTTP client for verification
 - `pattern_matcher` (Optional[PatternMatcher]): Pattern matcher (auto-created if None)
@@ -228,12 +249,14 @@ TakeoverDetector(
 Detect subdomain takeover vulnerabilities.
 
 **Parameters:**
+
 - `data` (dict): Dictionary with keys:
   - `domain` (str): Target domain
   - `dns_records` (list[DNSResult]): DNS records to analyze
   - `scan_id` (str): Current scan ID
 
 **Returns:**
+
 - `list[Finding]`: List of findings
 
 ---
@@ -253,10 +276,12 @@ Generates detailed JSON reports.
 Generate JSON report.
 
 **Parameters:**
+
 - `scan_results` (dict): Scan results dictionary
 - `output_path` (Path): Output file path
 
 **Example:**
+
 ```python
 reporter = JSONReporter()
 reporter.generate(results, Path("report.json"))
@@ -279,10 +304,12 @@ Generates professional HTML reports with Jinja2 templates.
 Generate HTML report.
 
 **Parameters:**
+
 - `scan_results` (dict): Scan results dictionary
 - `output_path` (Path): Output file path
 
 **Example:**
+
 ```python
 reporter = HTMLReporter()
 reporter.generate(results, Path("report.html"))
@@ -349,6 +376,7 @@ EmailAlerter(
 ```
 
 **Parameters:**
+
 - `smtp_host` (str): SMTP server hostname
 - `smtp_port` (int): SMTP server port (587 for TLS, 465 for SSL)
 - `smtp_user` (str): SMTP username
@@ -364,14 +392,17 @@ EmailAlerter(
 Send email alert.
 
 **Parameters:**
+
 - `findings` (list): List of findings
 - `scan_id` (str): Scan identifier
 - `severity_threshold` (str): Minimum severity (CRITICAL, HIGH, MEDIUM, LOW)
 
 **Returns:**
+
 - `bool`: True if sent successfully
 
 **Example:**
+
 ```python
 alerter = EmailAlerter(
     smtp_host="smtp.gmail.com",
@@ -409,6 +440,7 @@ SlackAlerter(
 ```
 
 **Parameters:**
+
 - `webhook_url` (str): Slack incoming webhook URL
 - `http_client` (Optional[HTTPClient]): HTTP client (auto-created if None)
 
@@ -419,14 +451,17 @@ SlackAlerter(
 Send Slack alert.
 
 **Parameters:**
+
 - `findings` (list): List of findings
 - `scan_id` (str): Scan identifier
 - `severity_threshold` (str): Minimum severity
 
 **Returns:**
+
 - `bool`: True if sent successfully
 
 **Example:**
+
 ```python
 alerter = SlackAlerter(
     webhook_url="https://hooks.slack.com/services/YOUR/WEBHOOK/URL"
@@ -454,6 +489,7 @@ DatabaseManager(db_path: Path | str)
 ```
 
 **Parameters:**
+
 - `db_path` (Path | str): Path to SQLite database file
 
 #### Methods
@@ -463,6 +499,7 @@ DatabaseManager(db_path: Path | str)
 Initialize database and create tables.
 
 **Example:**
+
 ```python
 db = DatabaseManager(Path("security_scanner.db"))
 await db.initialize()
@@ -473,9 +510,11 @@ await db.initialize()
 Create scan record.
 
 **Parameters:**
+
 - `scan` (Scan): Scan object
 
 **Returns:**
+
 - `str`: Scan ID
 
 ##### `async create_finding(finding: Finding) -> str`
@@ -483,9 +522,11 @@ Create scan record.
 Create finding record.
 
 **Parameters:**
+
 - `finding` (Finding): Finding object
 
 **Returns:**
+
 - `str`: Finding ID
 
 ##### `async get_scan(scan_id: str) -> Optional[Scan]`
@@ -493,9 +534,11 @@ Create finding record.
 Retrieve scan by ID.
 
 **Parameters:**
+
 - `scan_id` (str): Scan ID
 
 **Returns:**
+
 - `Optional[Scan]`: Scan object or None
 
 ##### `async get_scan_findings(scan_id: str) -> list[Finding]`
@@ -503,9 +546,11 @@ Retrieve scan by ID.
 Get all findings for a scan.
 
 **Parameters:**
+
 - `scan_id` (str): Scan ID
 
 **Returns:**
+
 - `list[Finding]`: List of findings
 
 ##### `async list_scans(limit: int = 10) -> list[Scan]`
@@ -513,9 +558,11 @@ Get all findings for a scan.
 List recent scans.
 
 **Parameters:**
+
 - `limit` (int): Maximum number of scans to return
 
 **Returns:**
+
 - `list[Scan]`: List of scans (most recent first)
 
 ##### `async get_similar_findings(domain: str, finding_type: str, days: int = 7) -> list[Finding]`
@@ -523,11 +570,13 @@ List recent scans.
 Find similar findings from recent scans.
 
 **Parameters:**
+
 - `domain` (str): Domain to search
 - `finding_type` (str): Type of finding
 - `days` (int): Number of days to search back
 
 **Returns:**
+
 - `list[Finding]`: Similar findings
 
 ##### `async mark_finding_alerted(finding_id: str) -> None`
@@ -535,6 +584,7 @@ Find similar findings from recent scans.
 Mark finding as alerted.
 
 **Parameters:**
+
 - `finding_id` (str): Finding ID
 
 ---
@@ -552,6 +602,7 @@ Domain and input validation utilities.
 Validate domain name format.
 
 **Example:**
+
 ```python
 from security_scanner.utils.validators import is_valid_domain
 
@@ -564,6 +615,7 @@ if is_valid_domain("example.com"):
 Normalize domain (lowercase, strip whitespace, remove trailing dot).
 
 **Example:**
+
 ```python
 domain = normalize_domain("  EXAMPLE.COM.  ")  # Returns "example.com"
 ```
@@ -573,6 +625,7 @@ domain = normalize_domain("  EXAMPLE.COM.  ")  # Returns "example.com"
 Extract root domain from subdomain.
 
 **Example:**
+
 ```python
 root = extract_root_domain("api.sub.example.com")  # Returns "example.com"
 ```
@@ -603,6 +656,7 @@ HTTPClient(
 ```
 
 **Parameters:**
+
 - `timeout` (int): Request timeout in seconds
 - `user_agent` (str): User-Agent header
 - `rate_limit` (float): Requests per second
@@ -615,6 +669,7 @@ HTTPClient(
 Make GET request.
 
 **Example:**
+
 ```python
 async with HTTPClient() as client:
     data = await client.get("https://api.example.com/data")
@@ -637,6 +692,7 @@ Structured logging with structlog.
 Get a structured logger instance.
 
 **Example:**
+
 ```python
 from security_scanner.utils.logger import get_logger
 
@@ -654,6 +710,7 @@ logger.error("Scan failed", error=str(e))
 Scan session record.
 
 **Fields:**
+
 - `id` (str): Unique scan ID
 - `start_time` (datetime): Scan start time
 - `end_time` (Optional[datetime]): Scan end time
@@ -670,6 +727,7 @@ Scan session record.
 Security finding record.
 
 **Fields:**
+
 - `id` (str): Unique finding ID
 - `scan_id` (str): Associated scan ID
 - `severity` (str): Severity level (CRITICAL, HIGH, MEDIUM, LOW)
@@ -690,6 +748,7 @@ Security finding record.
 DNS resolution result.
 
 **Fields:**
+
 - `domain` (str): Domain queried
 - `record_type` (str): Record type (A, AAAA, CNAME, MX)
 - `values` (list[str]): Record values
@@ -704,7 +763,7 @@ DNS resolution result.
 
 ### Exception Hierarchy
 
-```
+```bash
 SecurityScannerError (base)
 ├── ConfigurationError
 ├── NetworkError
@@ -900,4 +959,4 @@ if __name__ == "__main__":
 **Version:** 0.1.0
 **Last Updated:** 2026-01-28
 
-For the latest API documentation, see: https://github.com/yourorg/security-monitoring
+For the latest API documentation, see: <https://github.com/Ap6pack/security-monitoring>

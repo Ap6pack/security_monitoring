@@ -107,7 +107,7 @@ We welcome many types of contributions:
 
 ### Finding Something to Work On
 
-- Check [Issues](https://github.com/yourorg/security-monitoring/issues) labeled `good first issue`
+- Check [Issues](https://github.com/Ap6pack/security-monitoring/issues) labeled `good first issue`
 - Look for issues labeled `help wanted`
 - Review [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) for incomplete features
 - Check TODO comments in the code
@@ -499,8 +499,8 @@ security_monitoring/
 
 ## Getting Help
 
-- **Questions**: Open a [Discussion](https://github.com/yourorg/security-monitoring/discussions)
-- **Bugs**: Open an [Issue](https://github.com/yourorg/security-monitoring/issues)
+- **Questions**: Open a [Discussion](https://github.com/Ap6pack/security-monitoring/discussions)
+- **Bugs**: Open an [Issue](https://github.com/Ap6pack/security-monitoring/issues)
 - **Chat**: Join our Discord/Slack (link)
 - **Email**: TBD
 

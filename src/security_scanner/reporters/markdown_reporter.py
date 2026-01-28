@@ -154,11 +154,13 @@ class MarkdownReporter:
 
             for i, finding in enumerate(severity_findings, 1):
                 domain = getattr(finding, "domain", "N/A")
-                title = getattr(finding, "title", "Untitled")
                 finding_type = getattr(finding, "type", "UNKNOWN")
                 cvss = getattr(finding, "cvss_score", 0.0)
                 description = getattr(finding, "description", "No description")
                 remediation = getattr(finding, "remediation", "No remediation provided")
+
+                # Generate title from type
+                title = self._generate_title(finding_type, domain)
 
                 lines.extend(
                     [
@@ -200,3 +202,35 @@ class MarkdownReporter:
         )
 
         return "\n".join(lines)
+
+    def _generate_title(self, finding_type: str, domain: str) -> str:
+        """
+        Generate a descriptive title for a finding.
+
+        Args:
+            finding_type: Type of finding
+            domain: Affected domain
+
+        Returns:
+            Descriptive title string
+        """
+        type_titles = {
+            "dangling_cname": "Dangling CNAME Record",
+            "dangling_dns": "Dangling DNS Record",
+            "subdomain_takeover": "Potential Subdomain Takeover",
+            "takeover_heroku": "Heroku Subdomain Takeover Risk",
+            "takeover_github": "GitHub Pages Takeover Risk",
+            "takeover_aws_s3": "AWS S3 Bucket Takeover Risk",
+            "takeover_aws_eb": "AWS Elastic Beanstalk Takeover Risk",
+            "takeover_azure": "Azure Service Takeover Risk",
+            "takeover_gcp": "Google Cloud Platform Takeover Risk",
+            "takeover_netlify": "Netlify Takeover Risk",
+            "takeover_vercel": "Vercel Takeover Risk",
+            "certificate_expiring": "Certificate Expiring Soon",
+            "certificate_expired": "Expired Certificate",
+            "certificate_shared": "Shared Certificate Risk",
+            "dns_misconfiguration": "DNS Misconfiguration",
+        }
+
+        title = type_titles.get(finding_type, finding_type.replace("_", " ").title())
+        return f"{title} - {domain}"

@@ -88,15 +88,50 @@ class JSONReporter:
         Returns:
             Dictionary representation of the finding
         """
+        domain = getattr(finding, "domain", "")
+        finding_type = getattr(finding, "type", "UNKNOWN")
+
         return {
             "id": getattr(finding, "id", None),
             "severity": getattr(finding, "severity", "UNKNOWN"),
-            "type": getattr(finding, "type", "UNKNOWN"),
-            "domain": getattr(finding, "domain", ""),
-            "title": getattr(finding, "title", ""),
+            "type": finding_type,
+            "domain": domain,
+            "title": self._generate_title(finding_type, domain),
             "description": getattr(finding, "description", ""),
             "cvss_score": getattr(finding, "cvss_score", 0.0),
             "remediation": getattr(finding, "remediation", ""),
             "detected_at": str(getattr(finding, "detected_at", "")),
             "metadata": getattr(finding, "raw_data", {}),
         }
+
+    def _generate_title(self, finding_type: str, domain: str) -> str:
+        """
+        Generate a descriptive title for a finding.
+
+        Args:
+            finding_type: Type of finding
+            domain: Affected domain
+
+        Returns:
+            Descriptive title string
+        """
+        type_titles = {
+            "dangling_cname": "Dangling CNAME Record",
+            "dangling_dns": "Dangling DNS Record",
+            "subdomain_takeover": "Potential Subdomain Takeover",
+            "takeover_heroku": "Heroku Subdomain Takeover Risk",
+            "takeover_github": "GitHub Pages Takeover Risk",
+            "takeover_aws_s3": "AWS S3 Bucket Takeover Risk",
+            "takeover_aws_eb": "AWS Elastic Beanstalk Takeover Risk",
+            "takeover_azure": "Azure Service Takeover Risk",
+            "takeover_gcp": "Google Cloud Platform Takeover Risk",
+            "takeover_netlify": "Netlify Takeover Risk",
+            "takeover_vercel": "Vercel Takeover Risk",
+            "certificate_expiring": "Certificate Expiring Soon",
+            "certificate_expired": "Expired Certificate",
+            "certificate_shared": "Shared Certificate Risk",
+            "dns_misconfiguration": "DNS Misconfiguration",
+        }
+
+        title = type_titles.get(finding_type, finding_type.replace("_", " ").title())
+        return f"{title} - {domain}"
