@@ -59,7 +59,8 @@ These vulnerabilities can persist for up to 796 days due to certificate authorit
   - Support for A, AAAA, CNAME, and MX records
 
 - **Certificate Transparency Monitoring**
-  - CT log analysis
+  - CT log analysis via crt.sh API
+  - Local JSON file fallback (bypass rate limiting)
   - Shared certificate detection
   - Expiration tracking
 
@@ -173,6 +174,13 @@ RATE_LIMIT_REQUESTS_PER_SECOND=2
 # Scanner
 MAX_CONCURRENT_SCANS=50
 SUBDOMAIN_SOURCES=crtsh,subfinder,assetfinder
+
+# Certificate Data (optional - fallback for rate limiting)
+# If crt.sh API returns 429 errors, download JSON manually:
+# 1. Visit: https://crt.sh/json?q=yourdomain.com in your browser
+# 2. Save response to: data/crtsh_yourdomain.json
+# 3. Set: CERTIFICATE_JSON_FILE=data/crtsh_yourdomain.json
+CERTIFICATE_JSON_FILE=
 
 # Alerting (optional)
 ENABLE_EMAIL_ALERTS=false
@@ -442,6 +450,27 @@ chmod +x security-scanner
 pip install -r requirements.txt
 ```
 
+#### crt.sh rate limiting (429 errors)
+
+If you encounter "429 Too Many Requests" errors from crt.sh:
+
+1. **Wait a few minutes** - Rate limits reset after a short period
+2. **Use a local JSON file** as fallback:
+
+   ```bash
+   # Download certificate data in your browser
+   # Visit: https://crt.sh/json?q=yourdomain.com
+   # Save the JSON response to: data/crtsh_yourdomain.json
+
+   # Configure the scanner to use the file
+   export CERTIFICATE_JSON_FILE=data/crtsh_yourdomain.json
+
+   # Run scan - it will use the file instead of API
+   security-scanner scan -d yourdomain.com
+   ```
+
+3. **Reduce scan frequency** - Space out scans to avoid hitting rate limits
+
 ## Contributing
 
 Contributions are welcome! Please follow these steps:
@@ -485,27 +514,61 @@ All core features are complete and fully tested with 118/118 tests passing (100%
 
 - ✅ Multi-source subdomain discovery (crt.sh, subfinder, assetfinder)
 - ✅ Comprehensive DNS analysis with dangling CNAME detection
-- ✅ Platform-specific takeover detection (8 platforms)
-- ✅ Email alerting integration via SMTP
-- ✅ Slack webhook notifications
-- ✅ HTML/JSON/Markdown/CSV report generation
-- ✅ SQLite database for historical tracking
+- ✅ Platform-specific takeover detection (8 platforms: Heroku, GitHub Pages, AWS S3/EB, Azure, GCP, Netlify, Vercel)
+- ✅ Email alerting integration via SMTP with HTML formatting
+- ✅ Slack webhook notifications with rich formatting
+- ✅ HTML/JSON/Markdown/CSV report generation with descriptive titles
+- ✅ SQLite database for historical tracking and deduplication
 - ✅ CVSS v3.1 scoring and risk assessment
-- ✅ Professional CLI with rich output
-- ✅ Comprehensive test suite (118 tests)
+- ✅ Professional CLI with rich output and progress tracking
+- ✅ Certificate JSON file fallback (bypass rate limiting)
+- ✅ Comprehensive test suite (118 tests, 100% pass rate)
+- ✅ Type-safe codebase (mypy strict mode, zero errors)
 
 ### 🚀 Future Enhancements
 
 Potential future additions (community contributions welcome):
 
-- [ ] Continuous monitoring mode with scheduled scans
-- [ ] REST API interface
-- [ ] Web dashboard for visualization
-- [ ] Integration with SIEM and SOAR tools
-- [ ] Custom pattern definition UI
-- [ ] Automated remediation workflows via cloud provider APIs
+**Monitoring & Automation:**
+
+- [ ] Continuous monitoring mode with scheduled scans (daemon mode)
+- [ ] Automated remediation workflows via cloud provider APIs (AWS Route53, Cloudflare, etc.)
+- [ ] Alerting digest mode (daily/weekly summaries instead of immediate alerts)
+- [ ] Multi-tenancy support for managed service providers
+
+**APIs & Integrations:**
+
+- [ ] REST API interface (FastAPI/Flask)
+- [ ] GraphQL API for flexible querying
+- [ ] Integration with SIEM platforms (Splunk, Elastic, QRadar)
+- [ ] Integration with SOAR tools (TheHive, Cortex, Demisto)
 - [ ] Webhook support for custom integrations
-- [ ] Container/Docker deployment options
+- [ ] PagerDuty/Opsgenie integration for incident management
+- [ ] Microsoft Teams webhook notifications
+
+**User Interface:**
+
+- [ ] Web dashboard for visualization and management
+- [ ] Custom pattern definition UI (web-based pattern editor)
+- [ ] Historical trend visualization and analytics
+- [ ] Interactive remediation workflow builder
+
+**Additional Detection:**
+
+- [ ] DNS hijacking detection
+- [ ] TLS/SSL misconfiguration scanning
+- [ ] CORS policy analysis
+- [ ] CSP header validation
+- [ ] Additional cloud platforms (DigitalOcean, Cloudflare Pages, etc.)
+- [ ] Kubernetes/container service detection
+
+**Deployment & Operations:**
+
+- [ ] Container/Docker deployment options with docker-compose
+- [ ] Kubernetes Helm charts
+- [ ] Terraform/Ansible deployment automation
+- [ ] High-availability clustering support
+- [ ] Distributed scanning across multiple nodes
 
 ## Acknowledgments
 
