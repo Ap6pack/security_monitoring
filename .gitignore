@@ -100,3 +100,6 @@ profile.stats
 # OS
 Thumbs.db
 .DS_Store
+
+# Data files
+crtsh_*.json
