@@ -2,7 +2,6 @@
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
 
 import yaml
 
@@ -32,7 +31,7 @@ class PatternMatcher:
     matching capabilities for CNAME targets and HTTP responses.
     """
 
-    def __init__(self, patterns_file: Optional[Path] = None) -> None:
+    def __init__(self, patterns_file: Path | None = None) -> None:
         """
         Initialize the pattern matcher.
 
@@ -193,7 +192,7 @@ class PatternMatcher:
 
         logger.info("Loaded default takeover patterns", count=len(self.patterns))
 
-    def match_cname(self, cname_target: str) -> Optional[PlatformPattern]:
+    def match_cname(self, cname_target: str) -> PlatformPattern | None:
         """
         Match a CNAME target against known platform patterns.
 

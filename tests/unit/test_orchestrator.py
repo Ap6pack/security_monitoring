@@ -1,7 +1,7 @@
 """Unit tests for scan orchestrator."""
 
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -9,7 +9,7 @@ from security_scanner.config import Settings
 from security_scanner.orchestrator import ScanOrchestrator
 from security_scanner.scanner.models import DNSResult, SubdomainResult
 from security_scanner.storage.database import DatabaseManager
-from security_scanner.storage.models import Finding, Scan
+from security_scanner.storage.models import Finding
 
 
 class TestScanOrchestrator:
@@ -115,7 +115,7 @@ class TestScanOrchestrator:
             mock_dang.return_value = []
             mock_take.return_value = []
 
-            result = await orchestrator.scan(domains)
+            await orchestrator.scan(domains)
 
             # Should scan root domain + discovered subdomains
             assert mock_dns.call_count == 3  # example.com + www + api
@@ -143,7 +143,7 @@ class TestScanOrchestrator:
             mock_dang.return_value = []
             mock_take.return_value = []
 
-            result = await orchestrator.scan(domains)
+            await orchestrator.scan(domains)
 
             # Should call DNS scan for the domain
             mock_dns.assert_called_once()
@@ -171,7 +171,7 @@ class TestScanOrchestrator:
             mock_dang.return_value = []
             mock_take.return_value = []
 
-            result = await orchestrator.scan(domains)
+            await orchestrator.scan(domains)
 
             # Both detectors should be called
             mock_dang.assert_called_once()

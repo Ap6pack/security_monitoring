@@ -10,14 +10,14 @@ from structlog.stdlib import BoundLogger
 from structlog.types import EventDict, Processor
 
 
-def add_app_context(logger: logging.Logger, method_name: str, event_dict: EventDict) -> EventDict:
+def add_app_context(_logger: logging.Logger, _method_name: str, event_dict: EventDict) -> EventDict:
     """Add application context to log records."""
     event_dict["app"] = "security-scanner"
     return event_dict
 
 
 def drop_color_message_key(
-    logger: logging.Logger, method_name: str, event_dict: EventDict
+    _logger: logging.Logger, _method_name: str, event_dict: EventDict
 ) -> EventDict:
     """Remove color-related keys from event dict for JSON output."""
     event_dict.pop("color_message", None)

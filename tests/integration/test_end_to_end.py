@@ -1,7 +1,7 @@
 """End-to-end integration tests for complete scan workflows."""
 
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -11,7 +11,6 @@ from security_scanner.scanner.models import DNSResult, SubdomainResult
 from security_scanner.storage.database import DatabaseManager
 from security_scanner.storage.models import Finding
 from tests.fixtures.mock_responses import (
-    get_mock_crtsh_response,
     get_mock_http_response,
 )
 
@@ -52,14 +51,18 @@ class TestEndToEndScan:
     ) -> None:
         """Test complete scan workflow with mocked external dependencies."""
         async with ScanOrchestrator(settings=settings, db=db) as orchestrator:
-            # Mock all external API calls at higher level
-            with patch.object(orchestrator.http_client, "get", new_callable=AsyncMock) as mock_http_get, \
+            # Mock at the subdomain scanner level to bypass crt.sh file fallback,
+            # plus DNS scanner and HTTP client for detection verification.
+            with patch.object(orchestrator.subdomain_scanner, "scan", new_callable=AsyncMock) as mock_sub_scan, \
                  patch.object(orchestrator.http_client, "fetch_text", new_callable=AsyncMock) as mock_http_fetch, \
                  patch.object(orchestrator.dns_scanner, "scan", new_callable=AsyncMock) as mock_dns_scan, \
                  patch.object(orchestrator.dns_scanner, "check_dangling_cname", new_callable=AsyncMock) as mock_check_dangling:
 
-                # Mock crt.sh response for subdomain discovery
-                mock_http_get.return_value = get_mock_crtsh_response("example.com")
+                # Return discovered subdomains directly
+                mock_sub_scan.return_value = [
+                    SubdomainResult(domain="api.example.com", source="crtsh"),
+                    SubdomainResult(domain="www.example.com", source="crtsh"),
+                ]
 
                 # Mock DNS scan results with CNAME for api.example.com
                 def dns_scan_side_effect(domain):
@@ -147,20 +150,26 @@ class TestEndToEndScan:
     ) -> None:
         """Test scanning multiple domains with different finding types."""
         async with ScanOrchestrator(settings=settings, db=db) as orchestrator:
-            with patch.object(orchestrator.http_client, "get", new_callable=AsyncMock) as mock_http_get, \
+            # Mock at subdomain scanner level to bypass crt.sh file fallback
+            with patch.object(orchestrator.subdomain_scanner, "scan", new_callable=AsyncMock) as mock_sub_scan, \
                  patch.object(orchestrator.http_client, "fetch_text", new_callable=AsyncMock) as mock_http_fetch, \
                  patch.object(orchestrator.dns_scanner, "scan", new_callable=AsyncMock) as mock_dns_scan, \
                  patch.object(orchestrator.dns_scanner, "check_dangling_cname", new_callable=AsyncMock) as mock_check_dangling:
 
-                # Mock crt.sh responses for both domains
-                def http_get_side_effect(url, params=None):
-                    if params and "example.com" in params.get("q", ""):
-                        return get_mock_crtsh_response("example.com")
-                    elif params and "test.com" in params.get("q", ""):
-                        return get_mock_crtsh_response("test.com")
+                # Return discovered subdomains per domain
+                def sub_scan_side_effect(domain):
+                    if domain == "example.com":
+                        return [
+                            SubdomainResult(domain="api.example.com", source="crtsh"),
+                            SubdomainResult(domain="www.example.com", source="crtsh"),
+                        ]
+                    elif domain == "test.com":
+                        return [
+                            SubdomainResult(domain="www.test.com", source="crtsh"),
+                        ]
                     return []
 
-                mock_http_get.side_effect = http_get_side_effect
+                mock_sub_scan.side_effect = sub_scan_side_effect
 
                 # Mock DNS scan results
                 def dns_scan_side_effect(domain):
@@ -227,8 +236,9 @@ class TestEndToEndScan:
 
                 # Mock DNS to fail for one subdomain
                 def dns_side_effect(domain, rdtype):
-                    from tests.fixtures.mock_responses import create_mock_dns_answer
                     import dns.exception
+
+                    from tests.fixtures.mock_responses import create_mock_dns_answer
 
                     if "bad.example" in domain:
                         raise dns.exception.Timeout()  # Fail for this subdomain

@@ -1,7 +1,7 @@
 """TTL-aware cache for DNS and other results."""
 
 import time
-from typing import Any, Generic, Optional, TypeVar
+from typing import Any, Generic, TypeVar
 
 T = TypeVar("T")
 
@@ -53,7 +53,7 @@ class DNSCache:
         """Create cache key from domain and record type."""
         return f"{domain.lower()}:{record_type.upper()}"
 
-    def get(self, domain: str, record_type: str) -> Optional[Any]:
+    def get(self, domain: str, record_type: str) -> Any | None:
         """
         Get a cached value.
 
@@ -89,7 +89,7 @@ class DNSCache:
         domain: str,
         record_type: str,
         value: Any,
-        ttl: Optional[int] = None,
+        ttl: int | None = None,
     ) -> None:
         """
         Set a cache value.

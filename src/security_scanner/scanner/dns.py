@@ -1,12 +1,12 @@
 """DNS resolution scanner with async support."""
 
 import asyncio
-from typing import Optional
 
 import dns.asyncresolver
 import dns.exception
 import dns.rdatatype
 import dns.resolver
+
 from security_scanner.scanner.models import DNSResult
 from security_scanner.storage.cache import DNSCache
 from security_scanner.utils.exceptions import DNSError
@@ -32,7 +32,7 @@ class DNSScanner:
     def __init__(
         self,
         nameservers: list[str],
-        cache: Optional[DNSCache] = None,
+        cache: DNSCache | None = None,
         timeout: int = 5,
         max_retries: int = 3,
         max_concurrent: int = 50,
@@ -176,9 +176,9 @@ class DNSScanner:
                 if record_type in ("A", "AAAA"):
                     values.append(str(rdata))
                 elif record_type == "CNAME":
-                    values.append(str(rdata.target).rstrip("."))  # type: ignore[attr-defined]
+                    values.append(str(rdata.target).rstrip("."))
                 elif record_type == "MX":
-                    values.append(f"{rdata.preference} {str(rdata.exchange).rstrip('.')}")  # type: ignore[attr-defined]
+                    values.append(f"{rdata.preference} {str(rdata.exchange).rstrip('.')}")
                 else:
                     values.append(str(rdata))
 
@@ -216,7 +216,7 @@ class DNSScanner:
             # Let timeout propagate to retry handler
             raise
 
-    async def check_dangling_cname(self, domain: str) -> tuple[bool, Optional[str]]:
+    async def check_dangling_cname(self, domain: str) -> tuple[bool, str | None]:
         """
         Check if a domain has a dangling CNAME record.
 
@@ -328,9 +328,9 @@ class DNSScanner:
                 if record_type in ("A", "AAAA"):
                     values.append(str(rdata))
                 elif record_type == "CNAME":
-                    values.append(str(rdata.target).rstrip("."))  # type: ignore[attr-defined]
+                    values.append(str(rdata.target).rstrip("."))
                 elif record_type == "MX":
-                    values.append(f"{rdata.preference} {str(rdata.exchange).rstrip('.')}")  # type: ignore[attr-defined]
+                    values.append(f"{rdata.preference} {str(rdata.exchange).rstrip('.')}")
                 else:
                     values.append(str(rdata))
 

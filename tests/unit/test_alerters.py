@@ -6,7 +6,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from security_scanner.alerters import EmailAlerter, SlackAlerter
-from security_scanner.utils.exceptions import AlerterError
 
 
 class MockFinding:

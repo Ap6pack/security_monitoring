@@ -1,7 +1,7 @@
 """Pydantic models for scanner results."""
 
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -26,7 +26,7 @@ class DNSResult(BaseModel):
     ttl: int = Field(default=300, description="Time to live")
     timestamp: datetime = Field(default_factory=datetime.utcnow, description="Query timestamp")
     nameserver: str = Field(description="Nameserver used")
-    error: Optional[str] = Field(default=None, description="Error if resolution failed")
+    error: str | None = Field(default=None, description="Error if resolution failed")
     is_dangling: bool = Field(default=False, description="Whether the record is dangling")
 
 

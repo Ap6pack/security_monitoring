@@ -1,7 +1,7 @@
 """Input validation utilities for domains, URLs, and other data."""
 
 import re
-from typing import Pattern
+from re import Pattern
 from urllib.parse import urlparse
 
 import validators

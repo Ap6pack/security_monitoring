@@ -2,9 +2,9 @@
 
 import asyncio
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from security_scanner.scanner.models import CertificateResult
 from security_scanner.utils.exceptions import ScannerError
@@ -58,7 +58,7 @@ class CertificateScanner:
         if self.json_file and self.json_file.exists():
             try:
                 logger.info("Loading certificate data from file", file=str(self.json_file))
-                with open(self.json_file, "r", encoding="utf-8") as f:
+                with open(self.json_file, encoding="utf-8") as f:
                     data = json.load(f)
 
                 if not isinstance(data, list):
@@ -103,12 +103,12 @@ class CertificateScanner:
 
         except Exception as e:
             logger.error("Certificate scan failed", domain=domain, error=str(e))
-            raise ScannerError(f"Certificate scan failed: {e}")
+            raise ScannerError(f"Certificate scan failed: {e}") from e
 
     def _parse_certificates(
         self,
         data: list[dict[str, Any]],
-        target_domain: str,
+        _target_domain: str,
     ) -> list[CertificateResult]:
         """
         Parse certificate data from crt.sh.
@@ -121,7 +121,7 @@ class CertificateScanner:
             List of parsed certificate results
         """
         certificates: dict[str, CertificateResult] = {}
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         for entry in data:
             try:
@@ -242,7 +242,7 @@ class CertificateScanner:
         Returns:
             List of recently issued certificates
         """
-        cutoff = datetime.now(timezone.utc)
+        cutoff = datetime.now(UTC)
         from datetime import timedelta
 
         cutoff = cutoff - timedelta(days=days)
@@ -266,7 +266,7 @@ class CertificateScanner:
         Returns:
             List of certificates expiring soon
         """
-        cutoff = datetime.now(timezone.utc)
+        cutoff = datetime.now(UTC)
         from datetime import timedelta
 
         cutoff = cutoff + timedelta(days=days)

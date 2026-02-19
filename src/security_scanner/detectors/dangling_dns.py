@@ -60,7 +60,7 @@ class DanglingDNSDetector:
 
     async def _check_dangling_cname(
         self,
-        domain: str,
+        _domain: str,
         dns_records: list[DNSResult],
         scan_id: str,
     ) -> list[Finding]:
@@ -71,7 +71,7 @@ class DanglingDNSDetector:
         cname_records = [r for r in dns_records if r.record_type == "CNAME" and r.values]
 
         for cname_record in cname_records:
-            for cname_target in cname_record.values:
+            for _cname_target in cname_record.values:
                 # Check if the CNAME target resolves
                 is_dangling, target = await self.dns_scanner.check_dangling_cname(
                     cname_record.domain
@@ -121,7 +121,7 @@ class DanglingDNSDetector:
 
     def _check_unresponsive_ips(
         self,
-        domain: str,
+        _domain: str,
         dns_records: list[DNSResult],
         scan_id: str,
     ) -> list[Finding]:
