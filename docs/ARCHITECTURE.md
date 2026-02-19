@@ -31,12 +31,14 @@ The Security Monitoring Tool is a professional-grade security scanner designed t
 - **Language:** Python 3.11+
 - **Async Framework:** asyncio
 - **HTTP Client:** aiohttp
-- **Database:** SQLite (aiosqlite)
+- **REST API:** FastAPI + Uvicorn
+- **Database:** SQLite (aiosqlite) with WAL journal mode
 - **DNS Resolution:** dnspython
 - **CLI Framework:** Typer
 - **Templating:** Jinja2
 - **Logging:** structlog
 - **Type Checking:** mypy (strict mode)
+- **CI/CD:** GitHub Actions
 
 ---
 
@@ -83,8 +85,8 @@ graph TB
 
 ### Architecture Layers
 
-1. **Presentation Layer** - CLI interface with Rich output
-2. **Orchestration Layer** - Scan coordination and workflow management
+1. **Presentation Layer** - CLI interface with Rich output, REST API with FastAPI
+2. **Orchestration Layer** - Scan coordination, scheduling, and monitoring daemon
 3. **Scanner Layer** - Data collection from multiple sources
 4. **Detection Layer** - Vulnerability analysis and pattern matching
 5. **Storage Layer** - Data persistence and retrieval
@@ -583,7 +585,10 @@ graph TB
 | Component | Responsibility | Technology |
 |-----------|---------------|------------|
 | CLI | User interface, command parsing | Typer, Rich |
+| REST API | HTTP API for programmatic access | FastAPI, Uvicorn |
 | Orchestrator | Workflow coordination | asyncio |
+| Scheduler | Scan scheduling and delta detection | asyncio |
+| Monitor Daemon | Signal handling, graceful lifecycle | asyncio, signal |
 | Subdomain Scanner | Subdomain discovery | aiohttp, subprocess |
 | DNS Scanner | DNS resolution | dnspython |
 | Certificate Scanner | CT log analysis | aiohttp |
@@ -722,18 +727,41 @@ flowchart LR
 
 ---
 
+## Recent Architecture Additions
+
+### REST API Layer (FastAPI)
+
+The scanner exposes a full REST API for programmatic access:
+
+- **Application factory** (`api/app.py`) with lifespan context manager
+- **Dependency injection** via `AppState` singleton and FastAPI `Depends()`
+- **Background task execution** for async scan processing
+- **Pydantic v2 models** for request/response validation
+- **Optional API key authentication** with timing-safe comparison
+- **UUID validation** on path parameters to prevent traversal attacks
+
+### Monitoring & Scheduling
+
+- **ScanScheduler** (`scheduler.py`) — interval-based scan loop with delta detection
+- **MonitorDaemon** (`monitor.py`) — signal handling, graceful shutdown, timeout management
+- Compares findings against 7-day history to identify new vulnerabilities
+
+### Docker Deployment
+
+- Multi-stage `Dockerfile` with non-root `scanner` user
+- `docker-compose.yml` with API + monitor services and persistent volumes
+- SQLite WAL journal mode for concurrent container access
+
 ## Future Architecture
 
 ### Planned Enhancements
 
-1. **REST API** - HTTP API for programmatic access
-2. **Web Dashboard** - Real-time monitoring UI
-3. **Distributed Scanning** - Worker pool architecture
-4. **PostgreSQL Support** - Enterprise database option
-5. **Kubernetes Deployment** - Container orchestration
-6. **Prometheus Metrics** - Advanced monitoring
-7. **GraphQL API** - Flexible data queries
-8. **Real-time Streaming** - WebSocket updates
+1. **Web Dashboard** - Real-time monitoring UI
+2. **Distributed Scanning** - Worker pool architecture
+3. **PostgreSQL Support** - Enterprise database option
+4. **Kubernetes Deployment** - Container orchestration via Helm charts
+5. **Prometheus Metrics** - Advanced monitoring
+6. **GraphQL API** - Flexible data queries
 
 ---
 
@@ -752,4 +780,4 @@ The architecture supports both single-server deployments for small-scale use and
 ---
 
 **Version:** 0.1.0
-**Last Updated:** 2026-01-28
+**Last Updated:** 2026-02-19

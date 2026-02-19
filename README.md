@@ -3,6 +3,7 @@
 A professional security scanning tool that detects cross-origin web attack vulnerabilities, dangling DNS records, shared certificates, and potential domain takeover risks. Built on research presented at Black Hat 2025.
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![CI](https://github.com/Ap6pack/security-monitoring/actions/workflows/ci.yml/badge.svg)](https://github.com/Ap6pack/security-monitoring/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
@@ -13,6 +14,9 @@ A professional security scanning tool that detects cross-origin web attack vulne
 - [Features](#features)
 - [Installation](#installation)
 - [Quick Start](#quick-start)
+- [REST API](#rest-api)
+- [Continuous Monitoring](#continuous-monitoring)
+- [Docker Deployment](#docker-deployment)
 - [Configuration](#configuration)
 - [CLI Commands](#cli-commands)
 - [Understanding Security Findings](#understanding-security-findings)
@@ -80,6 +84,26 @@ These vulnerabilities can persist for up to 796 days due to certificate authorit
   - CVSS v3.1 scoring
   - Detailed remediation guidance
 
+- **REST API (FastAPI)**
+  - Full CRUD API for scans and findings
+  - Async background scan execution
+  - Report generation via API
+  - Health check and config validation endpoints
+  - Optional API key authentication
+  - Pydantic request/response models
+
+- **Continuous Monitoring Mode**
+  - Scheduled scan daemon with configurable intervals
+  - Delta detection — alerts only on new findings
+  - Graceful signal handling (SIGINT/SIGTERM)
+  - Scan history tracking and comparison
+
+- **Docker Deployment**
+  - Multi-stage Dockerfile with non-root user
+  - docker-compose with API and monitor services
+  - Persistent volumes for data and reports
+  - WAL journal mode for concurrent SQLite access
+
 ## Installation
 
 ### Prerequisites
@@ -144,6 +168,101 @@ security-scanner scan -f domains.txt
 
 ```bash
 security-scanner scan -d example.com --verbose
+```
+
+## REST API
+
+The scanner includes a full REST API built with FastAPI for programmatic access.
+
+### Start the API Server
+
+```bash
+security-scanner serve --host 0.0.0.0 --port 8000
+```
+
+### API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/v1/scans` | Start a new scan (async, returns scan_id) |
+| `GET` | `/api/v1/scans` | List scans with pagination |
+| `GET` | `/api/v1/scans/{scan_id}` | Get scan details and findings |
+| `POST` | `/api/v1/scans/{scan_id}/reports` | Generate reports |
+| `GET` | `/api/v1/health` | Health check with DB status |
+| `GET` | `/api/v1/config/validate` | Validate configuration |
+
+### Example: Start a Scan via API
+
+```bash
+# Start a scan
+curl -X POST http://localhost:8000/api/v1/scans \
+  -H "Content-Type: application/json" \
+  -d '{"domains": ["example.com"]}'
+
+# Check scan status
+curl http://localhost:8000/api/v1/scans/<scan_id>
+```
+
+### API Authentication
+
+API key authentication is optional. Set `SECURITY_SCANNER_API_KEY` in your environment to enable it:
+
+```bash
+export SECURITY_SCANNER_API_KEY=your-secret-key
+
+# Then pass the key via header
+curl -H "X-API-Key: your-secret-key" http://localhost:8000/api/v1/scans
+```
+
+Interactive API docs are available at `http://localhost:8000/docs` when the server is running.
+
+## Continuous Monitoring
+
+Run the scanner as a daemon that performs scheduled scans and alerts on new findings.
+
+### Start Monitoring
+
+```bash
+# Scan every hour
+security-scanner monitor -d example.com --interval 3600
+
+# Monitor multiple domains
+security-scanner monitor -d example.com -d api.example.com --interval 1800
+```
+
+The monitor daemon:
+
+- Runs scans at the configured interval
+- Detects new findings by comparing against the last 7 days
+- Logs all activity with structured logging
+- Handles SIGINT/SIGTERM for graceful shutdown
+
+## Docker Deployment
+
+### Using Docker Compose
+
+```bash
+# Start API server
+docker-compose up -d scanner-api
+
+# Start monitoring daemon
+docker-compose --profile monitoring up -d
+
+# View logs
+docker-compose logs -f scanner-api
+```
+
+### Using Docker Directly
+
+```bash
+# Build image
+docker build -t security-scanner .
+
+# Run API server
+docker run -p 8000:8000 -v scanner-data:/app/data security-scanner
+
+# Run a one-off scan
+docker run -v scanner-data:/app/data security-scanner scan -d example.com
 ```
 
 ## Configuration
@@ -242,6 +361,26 @@ security-scanner report --scan-id <SCAN_ID> --format json,html,markdown,csv
 security-scanner report --scan-id <SCAN_ID> --output reports/
 ```
 
+### API Server
+
+```bash
+# Start REST API server
+security-scanner serve --host 0.0.0.0 --port 8000
+
+# With auto-reload for development
+security-scanner serve --reload
+```
+
+### Monitoring Mode
+
+```bash
+# Start continuous monitoring (scan every hour)
+security-scanner monitor -d example.com --interval 3600
+
+# Monitor multiple domains
+security-scanner monitor -d example.com -d test.com --interval 1800
+```
+
 ### Utility Commands
 
 ```bash
@@ -286,18 +425,31 @@ make validate
 ```text
 security_monitoring/
 ├── src/security_scanner/      # Main source code
+│   ├── api/                   # REST API (FastAPI)
+│   │   ├── routes/            # API endpoint handlers
+│   │   ├── app.py             # Application factory
+│   │   ├── auth.py            # API key authentication
+│   │   ├── dependencies.py    # Dependency injection
+│   │   └── models.py          # Request/response schemas
 │   ├── scanner/               # Scanner modules
 │   ├── detectors/             # Vulnerability detectors
+│   ├── reporters/             # Report generators
+│   ├── alerters/              # Alert channels
 │   ├── storage/               # Database and caching
 │   ├── utils/                 # Utility functions
 │   ├── config.py              # Configuration management
 │   ├── orchestrator.py        # Scan orchestration
+│   ├── scheduler.py           # Scan scheduling engine
+│   ├── monitor.py             # Monitoring daemon
 │   └── main.py                # CLI interface
+├── .github/workflows/         # CI/CD pipeline
 ├── config/                    # Configuration files
-├── tests/                     # Test suite
+├── tests/                     # Test suite (406 tests)
 ├── data/                      # Database storage
 ├── logs/                      # Application logs
-└── reports/                   # Generated reports
+├── reports/                   # Generated reports
+├── Dockerfile                 # Container image
+└── docker-compose.yml         # Multi-service deployment
 ```
 
 ## Understanding Security Findings
@@ -489,8 +641,10 @@ Contributions are welcome! Please follow these steps:
 - Add type hints to all functions (validated with mypy in strict mode)
 - Write tests for new features (pytest with async support)
 - Update documentation as needed
-- Maintain 100% test pass rate (currently 118/118 tests passing)
+- Maintain 100% test pass rate (currently 406 tests passing)
+- Coverage gate: 80%+ (currently 85%+)
 - All code is type-safe with zero mypy errors
+- CI pipeline validates all PRs (lint, types, tests across Python 3.11-3.13)
 
 ## License
 
@@ -506,69 +660,44 @@ Adam Rhys Heaton (Ap6pack)
 
 ## Status
 
-**Current Version: 0.1.0** - Production Ready ✅
+**Current Version: 0.1.0** - Production Ready
 
-All core features are complete and fully tested with 118/118 tests passing (100% pass rate).
+406 tests passing, 85%+ coverage, zero lint/type errors, CI/CD pipeline active.
 
-### ✅ Implemented Features
+### Implemented Features
 
-- ✅ Multi-source subdomain discovery (crt.sh, subfinder, assetfinder)
-- ✅ Comprehensive DNS analysis with dangling CNAME detection
-- ✅ Platform-specific takeover detection (8 platforms: Heroku, GitHub Pages, AWS S3/EB, Azure, GCP, Netlify, Vercel)
-- ✅ Email alerting integration via SMTP with HTML formatting
-- ✅ Slack webhook notifications with rich formatting
-- ✅ HTML/JSON/Markdown/CSV report generation with descriptive titles
-- ✅ SQLite database for historical tracking and deduplication
-- ✅ CVSS v3.1 scoring and risk assessment
-- ✅ Professional CLI with rich output and progress tracking
-- ✅ Certificate JSON file fallback (bypass rate limiting)
-- ✅ Comprehensive test suite (118 tests, 100% pass rate)
-- ✅ Type-safe codebase (mypy strict mode, zero errors)
+- Multi-source subdomain discovery (crt.sh, subfinder, assetfinder)
+- Comprehensive DNS analysis with dangling CNAME detection
+- Platform-specific takeover detection (8 platforms: Heroku, GitHub Pages, AWS S3/EB, Azure, GCP, Netlify, Vercel)
+- Email alerting integration via SMTP with HTML formatting
+- Slack webhook notifications with rich formatting
+- HTML/JSON/Markdown/CSV report generation
+- SQLite database for historical tracking and deduplication
+- CVSS v3.1 scoring and risk assessment
+- Professional CLI with rich output and progress tracking
+- REST API with FastAPI (async background scans, report generation, health checks)
+- Continuous monitoring mode with scheduled scans and delta detection
+- Docker deployment with docker-compose (API + monitor services)
+- CI/CD pipeline (GitHub Actions: lint, types, tests across Python 3.11-3.13)
+- Type-safe codebase (mypy strict mode, zero errors)
+- 406-test suite with 85%+ coverage
 
-### 🚀 Future Enhancements
+### Future Enhancements
 
 Potential future additions (community contributions welcome):
 
-**Monitoring & Automation:**
-
-- [ ] Continuous monitoring mode with scheduled scans (daemon mode)
 - [ ] Automated remediation workflows via cloud provider APIs (AWS Route53, Cloudflare, etc.)
 - [ ] Alerting digest mode (daily/weekly summaries instead of immediate alerts)
-- [ ] Multi-tenancy support for managed service providers
-
-**APIs & Integrations:**
-
-- [ ] REST API interface (FastAPI/Flask)
 - [ ] GraphQL API for flexible querying
 - [ ] Integration with SIEM platforms (Splunk, Elastic, QRadar)
 - [ ] Integration with SOAR tools (TheHive, Cortex, Demisto)
-- [ ] Webhook support for custom integrations
 - [ ] PagerDuty/Opsgenie integration for incident management
-- [ ] Microsoft Teams webhook notifications
-
-**User Interface:**
-
 - [ ] Web dashboard for visualization and management
-- [ ] Custom pattern definition UI (web-based pattern editor)
-- [ ] Historical trend visualization and analytics
-- [ ] Interactive remediation workflow builder
-
-**Additional Detection:**
-
 - [ ] DNS hijacking detection
 - [ ] TLS/SSL misconfiguration scanning
-- [ ] CORS policy analysis
-- [ ] CSP header validation
-- [ ] Additional cloud platforms (DigitalOcean, Cloudflare Pages, etc.)
-- [ ] Kubernetes/container service detection
-
-**Deployment & Operations:**
-
-- [ ] Container/Docker deployment options with docker-compose
+- [ ] CORS policy analysis / CSP header validation
 - [ ] Kubernetes Helm charts
-- [ ] Terraform/Ansible deployment automation
 - [ ] High-availability clustering support
-- [ ] Distributed scanning across multiple nodes
 
 ## Acknowledgments
 

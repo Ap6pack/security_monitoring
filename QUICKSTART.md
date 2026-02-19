@@ -166,6 +166,28 @@ The scanner will automatically detect and use them if they're installed.
 
 ## Running Regular Scans
 
+### Built-in Monitoring Mode
+
+The scanner has a built-in monitoring daemon that runs scheduled scans:
+
+```bash
+# Scan every hour, alerting only on new findings
+security-scanner monitor -d example.com --interval 3600
+```
+
+### REST API
+
+Start the API server for programmatic access:
+
+```bash
+security-scanner serve --host 0.0.0.0 --port 8000
+
+# Then use curl or any HTTP client
+curl -X POST http://localhost:8000/api/v1/scans -H "Content-Type: application/json" -d '{"domains": ["example.com"]}'
+```
+
+### Cron (Alternative)
+
 Set up a daily scan with cron:
 
 ```bash
@@ -219,8 +241,11 @@ security-scanner scan -f domains.txt
 # Verbose output
 security-scanner scan -d example.com --verbose
 
-# Quiet output
-security-scanner scan -d example.com --quiet
+# Start REST API server
+security-scanner serve --port 8000
+
+# Start monitoring daemon
+security-scanner monitor -d example.com --interval 3600
 
 # View history
 security-scanner list-scans

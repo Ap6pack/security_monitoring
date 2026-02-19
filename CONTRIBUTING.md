@@ -261,7 +261,7 @@ pytest tests/unit/test_dns_scanner.py::TestDNSScanner::test_resolve_domain -v
 
 ### Test Coverage
 
-- **Minimum coverage**: 60% overall
+- **Minimum coverage**: 80% overall (enforced by CI)
 - **New code**: Should have >80% coverage
 - **Critical paths**: 100% coverage (validators, detectors)
 - **Happy path + error cases**: Test both success and failure
@@ -521,4 +521,4 @@ By contributing, you agree that your contributions will be licensed under the MI
 
 **Thank you for contributing to making the internet safer!**
 
-**Last Updated:** 2026-01-28
+**Last Updated:** 2026-02-19

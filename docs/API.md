@@ -4,12 +4,87 @@ Complete API reference for the Security Monitoring Tool.
 
 ## Table of Contents
 
+- [REST API (HTTP Endpoints)](#rest-api-http-endpoints)
 - [Scanner APIs](#scanner-apis)
 - [Detector APIs](#detector-apis)
 - [Reporter APIs](#reporter-apis)
 - [Alerter APIs](#alerter-apis)
 - [Storage APIs](#storage-apis)
 - [Utility APIs](#utility-apis)
+
+---
+
+## REST API (HTTP Endpoints)
+
+The scanner provides a REST API via FastAPI. Start it with `security-scanner serve`.
+
+Interactive docs: `http://localhost:8000/docs` (Swagger UI) or `http://localhost:8000/redoc` (ReDoc).
+
+### Authentication
+
+Set `SECURITY_SCANNER_API_KEY` environment variable to enable API key authentication. Pass the key via `X-API-Key` header. Authentication is disabled when the env var is not set.
+
+### Endpoints
+
+#### POST /api/v1/scans
+
+Start a new scan. Returns immediately with a scan_id; the scan runs in the background.
+
+**Request:**
+
+```json
+{"domains": ["example.com", "test.com"]}
+```
+
+**Response (202):**
+
+```json
+{"scan_id": "a1b2c3d4-...", "status": "running", "domains": ["example.com", "test.com"]}
+```
+
+#### GET /api/v1/scans
+
+List scans with pagination.
+
+**Query Parameters:** `limit` (default 20), `offset` (default 0)
+
+**Response (200):**
+
+```json
+{"scans": [...], "total": 42, "limit": 20, "offset": 0}
+```
+
+#### GET /api/v1/scans/{scan_id}
+
+Get scan details including findings.
+
+**Response (200):** Scan metadata, findings list, and severity summary.
+
+#### POST /api/v1/scans/{scan_id}/reports
+
+Generate reports for a completed scan.
+
+**Request:**
+
+```json
+{"formats": ["json", "html", "markdown"]}
+```
+
+**Response (200):** List of generated report file paths.
+
+#### GET /api/v1/health
+
+Health check. Returns API status and database connectivity. No authentication required.
+
+**Response (200):**
+
+```json
+{"status": "healthy", "version": "0.1.0", "database": "connected"}
+```
+
+#### GET /api/v1/config/validate
+
+Validate the current scanner configuration.
 
 ---
 
@@ -957,6 +1032,6 @@ if __name__ == "__main__":
 ## API Version
 
 **Version:** 0.1.0
-**Last Updated:** 2026-01-28
+**Last Updated:** 2026-02-19
 
 For the latest API documentation, see: <https://github.com/Ap6pack/security-monitoring>
