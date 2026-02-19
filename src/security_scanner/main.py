@@ -381,5 +381,121 @@ def validate_config(
         raise typer.Exit(1) from e
 
 
+@app.command()
+def serve(
+    host: str = typer.Option("127.0.0.1", "--host", "-H", help="Bind address"),
+    port: int = typer.Option(8000, "--port", "-p", help="Bind port"),
+    reload: bool = typer.Option(False, "--reload", help="Enable auto-reload for development"),
+) -> None:
+    """Start the REST API server.
+
+    Examples:
+        # Start on default port
+        security-scanner serve
+
+        # Start on custom host/port
+        security-scanner serve --host 0.0.0.0 --port 9000
+    """
+    import uvicorn
+
+    console.print(f"\n[bold]Security Scanner API v{__version__}[/bold]\n")
+    console.print(f"Starting server on {host}:{port}")
+    console.print(f"API docs: http://{host}:{port}/docs\n")
+
+    uvicorn.run(
+        "security_scanner.api.app:create_app",
+        host=host,
+        port=port,
+        reload=reload,
+        factory=True,
+    )
+
+
+@app.command()
+def monitor(
+    domains: list[str] | None = typer.Option(
+        None,
+        "--domain",
+        "-d",
+        help="Domain to monitor (can be specified multiple times)",
+    ),
+    domains_file: Path | None = typer.Option(
+        None,
+        "--domains-file",
+        "-f",
+        help="File containing domains to monitor (one per line)",
+    ),
+    interval: int = typer.Option(
+        3600,
+        "--interval",
+        "-i",
+        help="Scan interval in seconds",
+    ),
+) -> None:
+    """Start continuous monitoring mode.
+
+    Runs periodic scans and detects new findings.
+
+    Examples:
+        # Monitor with hourly scans
+        security-scanner monitor -d example.com
+
+        # Monitor with custom interval
+        security-scanner monitor -d example.com -i 1800
+
+        # Monitor domains from file
+        security-scanner monitor -f domains.txt -i 3600
+    """
+    target_domains: list[str] = []
+
+    if domains:
+        target_domains.extend(domains)
+
+    if domains_file:
+        if not domains_file.exists():
+            console.print(f"[red]Error: Domains file not found: {domains_file}[/red]")
+            raise typer.Exit(1)
+
+        with open(domains_file) as f:
+            file_domains = [line.strip() for line in f if line.strip() and not line.startswith("#")]
+            target_domains.extend(file_domains)
+
+    if not target_domains:
+        console.print("[red]Error: No domains specified. Use --domain or --domains-file[/red]")
+        raise typer.Exit(1)
+
+    console.print(f"\n[bold]Security Scanner Monitor v{__version__}[/bold]\n")
+    console.print(f"Monitoring {len(target_domains)} domain(s)")
+    console.print(f"Scan interval: {interval}s\n")
+
+    try:
+        asyncio.run(_run_monitor(target_domains, interval))
+    except KeyboardInterrupt:
+        console.print("\n[yellow]Monitor stopped by user[/yellow]")
+        raise typer.Exit(130) from None
+    except Exception as e:
+        console.print(f"\n[red]Error: {e}[/red]")
+        raise typer.Exit(1) from e
+
+
+async def _run_monitor(domains: list[str], interval: int) -> None:
+    """Run the monitoring daemon."""
+    from security_scanner.monitor import MonitorDaemon
+
+    settings = load_settings()
+    settings.ensure_directories()
+
+    db = DatabaseManager(settings.database_path)
+    await db.initialize()
+
+    daemon = MonitorDaemon(
+        settings=settings,
+        db=db,
+        domains=domains,
+        interval_seconds=interval,
+    )
+    await daemon.run()
+
+
 if __name__ == "__main__":
     app()
