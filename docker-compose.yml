@@ -1,0 +1,41 @@
+services:
+  scanner-api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_PATH=/app/data/security_scanner.db
+      - LOG_LEVEL=INFO
+      - LOG_FORMAT=json
+      - SECURITY_SCANNER_API_KEY=${SECURITY_SCANNER_API_KEY:-}
+    volumes:
+      - scanner-data:/app/data
+      - scanner-logs:/app/logs
+      - scanner-reports:/app/reports
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health')\""]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  scanner-monitor:
+    build: .
+    entrypoint: ["security-scanner", "monitor"]
+    command: ["-d", "example.com", "--interval", "3600"]
+    environment:
+      - DATABASE_PATH=/app/data/security_scanner.db
+      - LOG_LEVEL=INFO
+      - LOG_FORMAT=json
+    volumes:
+      - scanner-data:/app/data
+      - scanner-logs:/app/logs
+    restart: unless-stopped
+    profiles:
+      - monitoring
+
+volumes:
+  scanner-data:
+  scanner-logs:
+  scanner-reports:

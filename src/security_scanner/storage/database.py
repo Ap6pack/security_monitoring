@@ -59,6 +59,7 @@ class DatabaseManager:
             schema = migration_file.read_text()
 
         async with aiosqlite.connect(self.db_path) as db:
+            await db.execute("PRAGMA journal_mode=WAL")
             await db.executescript(schema)
             await db.commit()
 
