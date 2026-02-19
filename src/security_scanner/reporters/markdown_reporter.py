@@ -85,7 +85,7 @@ class MarkdownReporter:
             "",
             f"**Generated:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
             f"**Scan ID:** `{scan_id}`",
-            f"**Scanner Version:** 0.1.0",
+            "**Scanner Version:** 0.1.0",
             "",
             "## Executive Summary",
             "",

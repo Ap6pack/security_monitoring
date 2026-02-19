@@ -1,6 +1,6 @@
 """Subdomain takeover detection with platform-specific patterns."""
 
-from typing import Any, Optional
+from typing import Any
 
 from security_scanner.detectors.patterns import PatternMatcher, PlatformPattern
 from security_scanner.scanner.dns import DNSScanner
@@ -24,7 +24,7 @@ class TakeoverDetector:
         self,
         dns_scanner: DNSScanner,
         http_client: HTTPClient,
-        pattern_matcher: Optional[PatternMatcher] = None,
+        pattern_matcher: PatternMatcher | None = None,
     ) -> None:
         """
         Initialize the takeover detector.
@@ -77,7 +77,7 @@ class TakeoverDetector:
         domain: str,
         cname_target: str,
         scan_id: str,
-    ) -> Optional[Finding]:
+    ) -> Finding | None:
         """
         Check if a CNAME target matches known vulnerable platforms.
 

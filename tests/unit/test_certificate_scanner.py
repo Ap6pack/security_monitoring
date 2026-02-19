@@ -1,6 +1,6 @@
 """Unit tests for certificate scanner."""
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -12,7 +12,6 @@ from security_scanner.utils.http_client import HTTPClient
 from tests.fixtures.mock_responses import (
     get_mock_crtsh_expired_cert,
     get_mock_crtsh_response,
-    get_mock_crtsh_shared_cert,
 )
 
 
@@ -159,7 +158,7 @@ class TestCertificateScanner:
 
     def test_find_shared_certificates(self, scanner: CertificateScanner) -> None:
         """Test finding shared certificates."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         certificates = [
             CertificateResult(
@@ -198,7 +197,7 @@ class TestCertificateScanner:
 
     def test_find_recently_issued(self, scanner: CertificateScanner) -> None:
         """Test finding recently issued certificates."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         certificates = [
             CertificateResult(
@@ -232,7 +231,7 @@ class TestCertificateScanner:
 
     def test_find_expiring_soon(self, scanner: CertificateScanner) -> None:
         """Test finding certificates expiring soon."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         certificates = [
             CertificateResult(

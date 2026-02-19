@@ -1,7 +1,7 @@
 """Data models for storage."""
 
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 from uuid import uuid4
 
 from pydantic import BaseModel, Field
@@ -17,8 +17,8 @@ class Scan(BaseModel):
 
     id: str = Field(default_factory=generate_uuid, description="Unique scan ID")
     start_time: datetime = Field(default_factory=datetime.utcnow, description="Scan start time")
-    end_time: Optional[datetime] = Field(default=None, description="Scan end time")
-    duration_seconds: Optional[int] = Field(default=None, description="Scan duration")
+    end_time: datetime | None = Field(default=None, description="Scan end time")
+    duration_seconds: int | None = Field(default=None, description="Scan duration")
     domains_scanned: list[str] = Field(default_factory=list, description="Domains scanned")
     status: str = Field(default="running", description="Scan status")
     scanner_version: str = Field(default="0.1.0", description="Scanner version")
@@ -37,10 +37,10 @@ class Finding(BaseModel):
     severity: str = Field(description="Finding severity (CRITICAL, HIGH, MEDIUM, LOW)")
     type: str = Field(description="Finding type (dangling_dns, takeover, etc.)")
     domain: str = Field(description="Affected domain")
-    record_type: Optional[str] = Field(default=None, description="DNS record type")
-    target: Optional[str] = Field(default=None, description="Target resource")
+    record_type: str | None = Field(default=None, description="DNS record type")
+    target: str | None = Field(default=None, description="Target resource")
     description: str = Field(description="Finding description")
-    cvss_score: Optional[float] = Field(default=None, description="CVSS score")
+    cvss_score: float | None = Field(default=None, description="CVSS score")
     remediation: str = Field(description="Remediation steps")
     raw_data: dict[str, Any] = Field(default_factory=dict, description="Raw data")
     detected_at: datetime = Field(
@@ -52,7 +52,7 @@ class Finding(BaseModel):
         description="First seen timestamp",
     )
     alerted: bool = Field(default=False, description="Whether alert was sent")
-    platform: Optional[str] = Field(default=None, description="Detected platform")
+    platform: str | None = Field(default=None, description="Detected platform")
     confidence: float = Field(default=1.0, ge=0.0, le=1.0, description="Detection confidence")
 
 
@@ -86,7 +86,7 @@ class AlertHistory(BaseModel):
     channel: str = Field(description="Alert channel (email, slack)")
     sent_at: datetime = Field(default_factory=datetime.utcnow, description="Send timestamp")
     success: bool = Field(description="Whether alert was successful")
-    error_message: Optional[str] = Field(default=None, description="Error message if failed")
+    error_message: str | None = Field(default=None, description="Error message if failed")
     retry_count: int = Field(default=0, description="Number of retry attempts")
 
 
@@ -100,7 +100,7 @@ class DNSRecord(BaseModel):
     timestamp: datetime = Field(default_factory=datetime.utcnow, description="Query timestamp")
     nameserver: str = Field(description="Nameserver used")
     is_dangling: bool = Field(default=False, description="Whether record is dangling")
-    error: Optional[str] = Field(default=None, description="Error message if query failed")
+    error: str | None = Field(default=None, description="Error message if query failed")
 
 
 class SubdomainRecord(BaseModel):

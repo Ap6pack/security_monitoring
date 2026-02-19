@@ -1,6 +1,5 @@
 """Unit tests for subdomain scanner."""
 
-import asyncio
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -8,7 +7,6 @@ import pytest
 
 from security_scanner.scanner.models import SubdomainResult
 from security_scanner.scanner.subdomain import SubdomainScanner
-from security_scanner.utils.exceptions import ScannerError
 from security_scanner.utils.http_client import HTTPClient
 from tests.fixtures.mock_responses import (
     MOCK_ASSETFINDER_OUTPUT,

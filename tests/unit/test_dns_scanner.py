@@ -1,6 +1,7 @@
 """Unit tests for DNS scanner."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+import asyncio
+from unittest.mock import AsyncMock, patch
 
 import dns.exception
 import dns.resolver
@@ -9,7 +10,6 @@ import pytest
 from security_scanner.scanner.dns import DNSScanner
 from security_scanner.scanner.models import DNSResult
 from security_scanner.storage.cache import DNSCache
-from security_scanner.utils.exceptions import DNSError
 from tests.fixtures.mock_responses import create_mock_dns_answer
 
 
@@ -357,6 +357,3 @@ class TestDNSScanner:
         """Test cleanup method."""
         await scanner.close()  # Should not raise
 
-
-# Import asyncio for concurrency test
-import asyncio

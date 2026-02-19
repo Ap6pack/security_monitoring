@@ -9,7 +9,6 @@ from security_scanner.detectors.patterns import PatternMatcher, PlatformPattern
 from security_scanner.detectors.takeover import TakeoverDetector
 from security_scanner.scanner.dns import DNSScanner
 from security_scanner.scanner.models import DNSResult
-from security_scanner.storage.models import Finding
 from security_scanner.utils.http_client import HTTPClient
 from tests.fixtures.mock_responses import get_mock_http_response
 

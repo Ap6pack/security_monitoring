@@ -1,13 +1,13 @@
 """Mock responses for external APIs used in testing."""
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 
 # Mock crt.sh API responses
 def get_mock_crtsh_response(domain: str = "example.com") -> list[dict[str, Any]]:
     """Get mock crt.sh API response."""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
 
     return [
         {
@@ -42,7 +42,7 @@ def get_mock_crtsh_response(domain: str = "example.com") -> list[dict[str, Any]]
 
 def get_mock_crtsh_expired_cert(domain: str = "example.com") -> list[dict[str, Any]]:
     """Get mock crt.sh response with expired certificate."""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
 
     return [
         {
@@ -59,7 +59,7 @@ def get_mock_crtsh_expired_cert(domain: str = "example.com") -> list[dict[str, A
 
 def get_mock_crtsh_shared_cert(domain: str = "example.com") -> list[dict[str, Any]]:
     """Get mock crt.sh response with shared certificate."""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
 
     return [
         {

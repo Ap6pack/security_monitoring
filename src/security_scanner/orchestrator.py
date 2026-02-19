@@ -1,7 +1,7 @@
 """Main scan orchestration logic."""
 
 import asyncio
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from security_scanner.config import Settings
@@ -139,7 +139,7 @@ class ScanOrchestrator:
             findings_by_severity = self._count_findings_by_severity(all_findings)
             await self.db.update_scan(
                 scan_id=scan.id,
-                end_time=datetime.now(timezone.utc),
+                end_time=datetime.now(UTC),
                 status="completed",
                 findings_count=findings_by_severity,
             )
@@ -162,7 +162,7 @@ class ScanOrchestrator:
             logger.error("Scan failed", scan_id=scan.id, error=str(e))
             await self.db.update_scan(
                 scan_id=scan.id,
-                end_time=datetime.now(timezone.utc),
+                end_time=datetime.now(UTC),
                 status="failed",
                 findings_count={},
             )

@@ -1,9 +1,7 @@
 """CLI interface for the security scanner."""
 
 import asyncio
-import sys
 from pathlib import Path
-from typing import Optional
 
 import typer
 from rich.console import Console
@@ -32,7 +30,7 @@ def version_callback(value: bool) -> None:
 
 @app.callback()
 def main(
-    version: Optional[bool] = typer.Option(
+    version: bool | None = typer.Option(
         None,
         "--version",
         "-v",
@@ -47,25 +45,25 @@ def main(
 
 @app.command()
 def scan(
-    domains: Optional[list[str]] = typer.Option(
+    domains: list[str] | None = typer.Option(
         None,
         "--domain",
         "-d",
         help="Domain to scan (can be specified multiple times)",
     ),
-    domains_file: Optional[Path] = typer.Option(
+    domains_file: Path | None = typer.Option(
         None,
         "--domains-file",
         "-f",
         help="File containing domains to scan (one per line)",
     ),
-    config_file: Optional[Path] = typer.Option(
+    _config_file: Path | None = typer.Option(
         None,
         "--config",
         "-c",
         help="Configuration file path",
     ),
-    output_dir: Optional[Path] = typer.Option(
+    _output_dir: Path | None = typer.Option(
         None,
         "--output",
         "-o",
@@ -138,11 +136,11 @@ def scan(
         asyncio.run(_run_scan(settings, target_domains))
     except KeyboardInterrupt:
         console.print("\n[yellow]Scan interrupted by user[/yellow]")
-        raise typer.Exit(130)
+        raise typer.Exit(130) from None
     except Exception as e:
         logger.error("Scan failed", error=str(e))
         console.print(f"\n[red]Error: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from e
 
 
 async def _run_scan(settings: Settings, domains: list[str]) -> None:
@@ -199,7 +197,7 @@ def init_db() -> None:
         console.print(f"[green]Database initialized: {settings.database_path}[/green]")
     except Exception as e:
         console.print(f"[red]Error: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from e
 
 
 @app.command()
@@ -238,7 +236,7 @@ def list_scans(
 
     except Exception as e:
         console.print(f"[red]Error: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from e
 
 
 @app.command()
@@ -250,7 +248,7 @@ def report(
         "-f",
         help="Report formats (comma-separated: html,json,markdown,csv)",
     ),
-    output_dir: Optional[Path] = typer.Option(
+    output_dir: Path | None = typer.Option(
         None,
         "--output",
         "-o",
@@ -286,7 +284,7 @@ def report(
         asyncio.run(_generate_report(settings, scan_id, formats, report_dir))
     except Exception as e:
         console.print(f"[red]Error: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from e
 
 
 async def _generate_report(
@@ -296,6 +294,7 @@ async def _generate_report(
     output_dir: Path,
 ) -> None:
     """Generate reports asynchronously."""
+    from security_scanner.reporters.base import BaseReporter
     from security_scanner.reporters.csv_reporter import CSVReporter
     from security_scanner.reporters.html_reporter import HTMLReporter
     from security_scanner.reporters.json_reporter import JSONReporter
@@ -336,7 +335,7 @@ async def _generate_report(
     }
 
     # Generate reports
-    reporters = {
+    reporters: dict[str, BaseReporter] = {
         "json": JSONReporter(),
         "html": HTMLReporter(),
         "markdown": MarkdownReporter(),
@@ -357,12 +356,12 @@ async def _generate_report(
         generated.append(output_path)
         console.print(f"[green]✓[/green] {fmt.upper()} report: {output_path}")
 
-    console.print(f"\n[bold green]Reports generated successfully![/bold green]")
+    console.print("\n[bold green]Reports generated successfully![/bold green]")
 
 
 @app.command()
 def validate_config(
-    config_file: Optional[Path] = typer.Option(
+    _config_file: Path | None = typer.Option(
         None,
         "--config",
         "-c",
@@ -379,7 +378,7 @@ def validate_config(
         console.print(f"Subdomain sources: {', '.join(settings.subdomain_sources)}")
     except Exception as e:
         console.print(f"[red]✗ Configuration error: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from e
 
 
 if __name__ == "__main__":

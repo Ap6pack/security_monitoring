@@ -1,7 +1,7 @@
 """Async HTTP client with retry logic and rate limiting."""
 
 import asyncio
-from typing import Any, Optional
+from typing import Any
 
 import aiohttp
 from aiohttp import ClientSession, ClientTimeout, TCPConnector
@@ -60,7 +60,7 @@ class HTTPClient:
             limit_per_host=10,
             ttl_dns_cache=300,
         )
-        self._session: Optional[ClientSession] = None
+        self._session: ClientSession | None = None
         self._rate_limiter = RateLimiter(rate=rate_limit, burst=rate_burst)
 
     async def __aenter__(self) -> "HTTPClient":
@@ -91,8 +91,8 @@ class HTTPClient:
     async def get(  # type: ignore[return]
         self,
         url: str,
-        params: Optional[dict[str, Any]] = None,
-        headers: Optional[dict[str, str]] = None,
+        params: dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
         rate_limit: bool = True,
     ) -> dict[str, Any]:
         """
@@ -138,13 +138,13 @@ class HTTPClient:
                     api_name=url,
                     status_code=e.status,
                     response_body=str(e),
-                )
+                ) from e
             except aiohttp.ClientError as e:
                 logger.warning("Network error", url=url, error=str(e))
-                raise NetworkError(f"Network error for {url}: {e}")
-            except asyncio.TimeoutError:
+                raise NetworkError(f"Network error for {url}: {e}") from e
+            except TimeoutError:
                 logger.warning("Request timeout", url=url)
-                raise NetworkError(f"Timeout requesting {url}")
+                raise NetworkError(f"Timeout requesting {url}") from None
 
         try:
             async for attempt in AsyncRetrying(
@@ -162,9 +162,9 @@ class HTTPClient:
     async def post(  # type: ignore[return]
         self,
         url: str,
-        data: Optional[dict[str, Any]] = None,
-        json: Optional[dict[str, Any]] = None,
-        headers: Optional[dict[str, str]] = None,
+        data: dict[str, Any] | None = None,
+        json: dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
         rate_limit: bool = True,
     ) -> dict[str, Any]:
         """
@@ -212,13 +212,13 @@ class HTTPClient:
                     api_name=url,
                     status_code=e.status,
                     response_body=str(e),
-                )
+                ) from e
             except aiohttp.ClientError as e:
                 logger.warning("Network error on POST", url=url, error=str(e))
-                raise NetworkError(f"Network error for {url}: {e}")
-            except asyncio.TimeoutError:
+                raise NetworkError(f"Network error for {url}: {e}") from e
+            except TimeoutError:
                 logger.warning("POST request timeout", url=url)
-                raise NetworkError(f"Timeout requesting {url}")
+                raise NetworkError(f"Timeout requesting {url}") from None
 
         try:
             async for attempt in AsyncRetrying(
@@ -235,7 +235,7 @@ class HTTPClient:
     async def fetch_text(  # type: ignore[return]
         self,
         url: str,
-        headers: Optional[dict[str, str]] = None,
+        headers: dict[str, str] | None = None,
         rate_limit: bool = True,
     ) -> str:
         """
@@ -270,11 +270,11 @@ class HTTPClient:
                     api_name=url,
                     status_code=e.status,
                     response_body=str(e),
-                )
+                ) from e
             except aiohttp.ClientError as e:
-                raise NetworkError(f"Network error for {url}: {e}")
-            except asyncio.TimeoutError:
-                raise NetworkError(f"Timeout requesting {url}")
+                raise NetworkError(f"Network error for {url}: {e}") from e
+            except TimeoutError:
+                raise NetworkError(f"Timeout requesting {url}") from None
 
         try:
             async for attempt in AsyncRetrying(

@@ -2,7 +2,6 @@
 
 import asyncio
 import time
-from typing import Optional
 
 
 class RateLimiter:
@@ -17,7 +16,7 @@ class RateLimiter:
         self,
         rate: float,
         burst: int = 1,
-        initial_tokens: Optional[int] = None,
+        initial_tokens: int | None = None,
     ) -> None:
         """
         Initialize the rate limiter.

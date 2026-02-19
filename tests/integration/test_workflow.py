@@ -90,7 +90,7 @@ class TestScanWorkflow:
 
         # Scan 2 - same finding
         scan2 = Scan(domains_scanned=["example.com"])
-        scan_id2 = await db.create_scan(scan2)
+        await db.create_scan(scan2)
 
         # Check for similar findings
         similar = await db.get_similar_findings(

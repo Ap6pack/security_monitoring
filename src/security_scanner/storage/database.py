@@ -1,9 +1,8 @@
 """Async SQLite database manager."""
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Optional
 
 import aiosqlite
 
@@ -13,7 +12,6 @@ from security_scanner.storage.models import (
     Finding,
     Scan,
 )
-from security_scanner.utils.exceptions import DatabaseError
 from security_scanner.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -22,7 +20,7 @@ logger = get_logger(__name__)
 def _ensure_utc(dt: datetime) -> datetime:
     """Ensure datetime is timezone-aware (UTC)."""
     if dt.tzinfo is None:
-        return dt.replace(tzinfo=timezone.utc)
+        return dt.replace(tzinfo=UTC)
     return dt
 
 
@@ -405,7 +403,7 @@ class DatabaseManager:
 
         return alert.id
 
-    async def get_scan(self, scan_id: str) -> Optional[Scan]:
+    async def get_scan(self, scan_id: str) -> Scan | None:
         """Get a scan by ID."""
         async with aiosqlite.connect(self.db_path) as db:
             db.row_factory = aiosqlite.Row

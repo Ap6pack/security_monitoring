@@ -4,7 +4,7 @@ import asyncio
 import json
 import subprocess
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from security_scanner.scanner.models import SubdomainResult
 from security_scanner.utils.exceptions import ScannerError
@@ -28,10 +28,10 @@ class SubdomainScanner:
     def __init__(
         self,
         http_client: HTTPClient,
-        subfinder_path: Optional[Path] = None,
-        assetfinder_path: Optional[Path] = None,
-        sources: Optional[list[str]] = None,
-        crtsh_json_file: Optional[Path] = None,
+        subfinder_path: Path | None = None,
+        assetfinder_path: Path | None = None,
+        sources: list[str] | None = None,
+        crtsh_json_file: Path | None = None,
     ) -> None:
         """
         Initialize the subdomain scanner.
@@ -116,7 +116,7 @@ class SubdomainScanner:
         if self.crtsh_json_file and self.crtsh_json_file.exists():
             try:
                 logger.info("Loading crt.sh data from file", file=str(self.crtsh_json_file))
-                with open(self.crtsh_json_file, "r", encoding="utf-8") as f:
+                with open(self.crtsh_json_file, encoding="utf-8") as f:
                     data = json.load(f)
 
                 if not isinstance(data, list):
@@ -147,7 +147,7 @@ class SubdomainScanner:
 
             except Exception as e:
                 logger.error("crt.sh query failed", domain=domain, error=str(e))
-                raise ScannerError(f"crt.sh query failed: {e}")
+                raise ScannerError(f"crt.sh query failed: {e}") from e
 
         # Parse the data (from file or API)
         subdomains: set[str] = set()
@@ -239,7 +239,7 @@ class SubdomainScanner:
             logger.debug("subfinder complete", domain=domain, count=len(results))
             return results
 
-        except asyncio.TimeoutError:
+        except TimeoutError:
             logger.warning("subfinder timeout", domain=domain)
             return []
         except Exception as e:
@@ -296,7 +296,7 @@ class SubdomainScanner:
             logger.debug("assetfinder complete", domain=domain, count=len(results))
             return results
 
-        except asyncio.TimeoutError:
+        except TimeoutError:
             logger.warning("assetfinder timeout", domain=domain)
             return []
         except Exception as e:
