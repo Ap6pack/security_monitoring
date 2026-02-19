@@ -23,6 +23,7 @@ from security_scanner.storage.models import Finding, Scan
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _make_scan(
     scan_id: str = "scan-001",
     domains: list[str] | None = None,
@@ -80,6 +81,7 @@ def _make_finding(
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture(autouse=True)
 def _clear_api_key(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -149,6 +151,7 @@ async def client(
 # Health & Config
 # ---------------------------------------------------------------------------
 
+
 class TestHealthEndpoint:
     """Tests for GET /api/v1/health."""
 
@@ -195,6 +198,7 @@ class TestConfigValidateEndpoint:
 # ---------------------------------------------------------------------------
 # Create Scan
 # ---------------------------------------------------------------------------
+
 
 class TestCreateScan:
     """Tests for POST /api/v1/scans."""
@@ -275,6 +279,7 @@ class TestCreateScan:
 # List Scans
 # ---------------------------------------------------------------------------
 
+
 class TestListScans:
     """Tests for GET /api/v1/scans."""
 
@@ -346,6 +351,7 @@ class TestListScans:
 # Get Scan
 # ---------------------------------------------------------------------------
 
+
 class TestGetScan:
     """Tests for GET /api/v1/scans/{scan_id}."""
 
@@ -385,6 +391,7 @@ class TestGetScan:
 # ---------------------------------------------------------------------------
 # Get Scan Findings
 # ---------------------------------------------------------------------------
+
 
 class TestGetScanFindings:
     """Tests for GET /api/v1/scans/{scan_id}/findings."""
@@ -467,6 +474,7 @@ class TestGetScanFindings:
 # ---------------------------------------------------------------------------
 # Reports
 # ---------------------------------------------------------------------------
+
 
 class TestGenerateReports:
     """Tests for POST /api/v1/scans/{scan_id}/reports."""
@@ -571,6 +579,7 @@ class TestGenerateReports:
 # ---------------------------------------------------------------------------
 # Authentication
 # ---------------------------------------------------------------------------
+
 
 class TestApiKeyAuth:
     """Tests for API key authentication."""

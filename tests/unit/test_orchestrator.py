@@ -75,10 +75,18 @@ class TestScanOrchestrator:
         domains = ["example.com"]
 
         # Mock all scanner methods to avoid actual network calls
-        with patch.object(orchestrator.subdomain_scanner, "scan", new_callable=AsyncMock) as mock_sub, \
-             patch.object(orchestrator.dns_scanner, "scan", new_callable=AsyncMock) as mock_dns, \
-             patch.object(orchestrator.dangling_detector, "detect", new_callable=AsyncMock) as mock_dang, \
-             patch.object(orchestrator.takeover_detector, "detect", new_callable=AsyncMock) as mock_take:
+        with (
+            patch.object(
+                orchestrator.subdomain_scanner, "scan", new_callable=AsyncMock
+            ) as mock_sub,
+            patch.object(orchestrator.dns_scanner, "scan", new_callable=AsyncMock) as mock_dns,
+            patch.object(
+                orchestrator.dangling_detector, "detect", new_callable=AsyncMock
+            ) as mock_dang,
+            patch.object(
+                orchestrator.takeover_detector, "detect", new_callable=AsyncMock
+            ) as mock_take,
+        ):
 
             mock_sub.return_value = []
             mock_dns.return_value = []
@@ -101,10 +109,18 @@ class TestScanOrchestrator:
         """Test subdomain discovery during scan."""
         domains = ["example.com"]
 
-        with patch.object(orchestrator.subdomain_scanner, "scan", new_callable=AsyncMock) as mock_sub, \
-             patch.object(orchestrator.dns_scanner, "scan", new_callable=AsyncMock) as mock_dns, \
-             patch.object(orchestrator.dangling_detector, "detect", new_callable=AsyncMock) as mock_dang, \
-             patch.object(orchestrator.takeover_detector, "detect", new_callable=AsyncMock) as mock_take:
+        with (
+            patch.object(
+                orchestrator.subdomain_scanner, "scan", new_callable=AsyncMock
+            ) as mock_sub,
+            patch.object(orchestrator.dns_scanner, "scan", new_callable=AsyncMock) as mock_dns,
+            patch.object(
+                orchestrator.dangling_detector, "detect", new_callable=AsyncMock
+            ) as mock_dang,
+            patch.object(
+                orchestrator.takeover_detector, "detect", new_callable=AsyncMock
+            ) as mock_take,
+        ):
 
             # Mock subdomain discovery
             mock_sub.return_value = [
@@ -125,10 +141,18 @@ class TestScanOrchestrator:
         """Test DNS resolution during scan."""
         domains = ["example.com"]
 
-        with patch.object(orchestrator.subdomain_scanner, "scan", new_callable=AsyncMock) as mock_sub, \
-             patch.object(orchestrator.dns_scanner, "scan", new_callable=AsyncMock) as mock_dns, \
-             patch.object(orchestrator.dangling_detector, "detect", new_callable=AsyncMock) as mock_dang, \
-             patch.object(orchestrator.takeover_detector, "detect", new_callable=AsyncMock) as mock_take:
+        with (
+            patch.object(
+                orchestrator.subdomain_scanner, "scan", new_callable=AsyncMock
+            ) as mock_sub,
+            patch.object(orchestrator.dns_scanner, "scan", new_callable=AsyncMock) as mock_dns,
+            patch.object(
+                orchestrator.dangling_detector, "detect", new_callable=AsyncMock
+            ) as mock_dang,
+            patch.object(
+                orchestrator.takeover_detector, "detect", new_callable=AsyncMock
+            ) as mock_take,
+        ):
 
             mock_sub.return_value = []
             mock_dns.return_value = [
@@ -153,10 +177,18 @@ class TestScanOrchestrator:
         """Test that detectors are executed during scan."""
         domains = ["example.com"]
 
-        with patch.object(orchestrator.subdomain_scanner, "scan", new_callable=AsyncMock) as mock_sub, \
-             patch.object(orchestrator.dns_scanner, "scan", new_callable=AsyncMock) as mock_dns, \
-             patch.object(orchestrator.dangling_detector, "detect", new_callable=AsyncMock) as mock_dang, \
-             patch.object(orchestrator.takeover_detector, "detect", new_callable=AsyncMock) as mock_take:
+        with (
+            patch.object(
+                orchestrator.subdomain_scanner, "scan", new_callable=AsyncMock
+            ) as mock_sub,
+            patch.object(orchestrator.dns_scanner, "scan", new_callable=AsyncMock) as mock_dns,
+            patch.object(
+                orchestrator.dangling_detector, "detect", new_callable=AsyncMock
+            ) as mock_dang,
+            patch.object(
+                orchestrator.takeover_detector, "detect", new_callable=AsyncMock
+            ) as mock_take,
+        ):
 
             mock_sub.return_value = []
             mock_dns.return_value = [
@@ -184,10 +216,18 @@ class TestScanOrchestrator:
         """Test that findings are stored in database."""
         domains = ["example.com"]
 
-        with patch.object(orchestrator.subdomain_scanner, "scan", new_callable=AsyncMock) as mock_sub, \
-             patch.object(orchestrator.dns_scanner, "scan", new_callable=AsyncMock) as mock_dns, \
-             patch.object(orchestrator.dangling_detector, "detect", new_callable=AsyncMock) as mock_dang, \
-             patch.object(orchestrator.takeover_detector, "detect", new_callable=AsyncMock) as mock_take:
+        with (
+            patch.object(
+                orchestrator.subdomain_scanner, "scan", new_callable=AsyncMock
+            ) as mock_sub,
+            patch.object(orchestrator.dns_scanner, "scan", new_callable=AsyncMock) as mock_dns,
+            patch.object(
+                orchestrator.dangling_detector, "detect", new_callable=AsyncMock
+            ) as mock_dang,
+            patch.object(
+                orchestrator.takeover_detector, "detect", new_callable=AsyncMock
+            ) as mock_take,
+        ):
 
             mock_sub.return_value = []
             mock_dns.return_value = []
@@ -223,10 +263,18 @@ class TestScanOrchestrator:
         """Test that scan summary includes correct counts."""
         domains = ["example.com"]
 
-        with patch.object(orchestrator.subdomain_scanner, "scan", new_callable=AsyncMock) as mock_sub, \
-             patch.object(orchestrator.dns_scanner, "scan", new_callable=AsyncMock) as mock_dns, \
-             patch.object(orchestrator.dangling_detector, "detect", new_callable=AsyncMock) as mock_dang, \
-             patch.object(orchestrator.takeover_detector, "detect", new_callable=AsyncMock) as mock_take:
+        with (
+            patch.object(
+                orchestrator.subdomain_scanner, "scan", new_callable=AsyncMock
+            ) as mock_sub,
+            patch.object(orchestrator.dns_scanner, "scan", new_callable=AsyncMock) as mock_dns,
+            patch.object(
+                orchestrator.dangling_detector, "detect", new_callable=AsyncMock
+            ) as mock_dang,
+            patch.object(
+                orchestrator.takeover_detector, "detect", new_callable=AsyncMock
+            ) as mock_take,
+        ):
 
             mock_sub.return_value = []
             mock_dns.return_value = []
@@ -288,10 +336,18 @@ class TestScanOrchestrator:
         """Test scanning multiple domains."""
         domains = ["example.com", "test.com"]
 
-        with patch.object(orchestrator.subdomain_scanner, "scan", new_callable=AsyncMock) as mock_sub, \
-             patch.object(orchestrator.dns_scanner, "scan", new_callable=AsyncMock) as mock_dns, \
-             patch.object(orchestrator.dangling_detector, "detect", new_callable=AsyncMock) as mock_dang, \
-             patch.object(orchestrator.takeover_detector, "detect", new_callable=AsyncMock) as mock_take:
+        with (
+            patch.object(
+                orchestrator.subdomain_scanner, "scan", new_callable=AsyncMock
+            ) as mock_sub,
+            patch.object(orchestrator.dns_scanner, "scan", new_callable=AsyncMock) as mock_dns,
+            patch.object(
+                orchestrator.dangling_detector, "detect", new_callable=AsyncMock
+            ) as mock_dang,
+            patch.object(
+                orchestrator.takeover_detector, "detect", new_callable=AsyncMock
+            ) as mock_take,
+        ):
 
             mock_sub.return_value = []
             mock_dns.return_value = []
@@ -311,7 +367,9 @@ class TestScanOrchestrator:
         """Test error handling during scan."""
         domains = ["example.com"]
 
-        with patch.object(orchestrator.subdomain_scanner, "scan", new_callable=AsyncMock) as mock_sub:
+        with patch.object(
+            orchestrator.subdomain_scanner, "scan", new_callable=AsyncMock
+        ) as mock_sub:
             # Make scanner raise exception
             mock_sub.side_effect = Exception("Scanner error")
 
@@ -329,10 +387,18 @@ class TestScanOrchestrator:
         """Test that scan continues when DNS fails for one subdomain."""
         domains = ["example.com"]
 
-        with patch.object(orchestrator.subdomain_scanner, "scan", new_callable=AsyncMock) as mock_sub, \
-             patch.object(orchestrator.dns_scanner, "scan", new_callable=AsyncMock) as mock_dns, \
-             patch.object(orchestrator.dangling_detector, "detect", new_callable=AsyncMock) as mock_dang, \
-             patch.object(orchestrator.takeover_detector, "detect", new_callable=AsyncMock) as mock_take:
+        with (
+            patch.object(
+                orchestrator.subdomain_scanner, "scan", new_callable=AsyncMock
+            ) as mock_sub,
+            patch.object(orchestrator.dns_scanner, "scan", new_callable=AsyncMock) as mock_dns,
+            patch.object(
+                orchestrator.dangling_detector, "detect", new_callable=AsyncMock
+            ) as mock_dang,
+            patch.object(
+                orchestrator.takeover_detector, "detect", new_callable=AsyncMock
+            ) as mock_take,
+        ):
 
             mock_sub.return_value = [
                 SubdomainResult(domain="www.example.com", source="crtsh"),

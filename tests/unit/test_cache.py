@@ -1,6 +1,5 @@
 """Unit tests for cache module."""
 
-
 import pytest
 
 from security_scanner.storage.cache import CacheEntry, DNSCache

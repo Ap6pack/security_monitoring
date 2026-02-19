@@ -305,7 +305,11 @@ class TestMultiRateLimiterTryAcquire:
     async def test_try_acquire_failure(self) -> None:
         """Test try_acquire failure when no tokens available."""
         multi = MultiRateLimiter()
-        multi.add_limiter("api", rate=0.001, burst=1, )
+        multi.add_limiter(
+            "api",
+            rate=0.001,
+            burst=1,
+        )
         # Consume the only token
         await multi.acquire("api")
         result = await multi.try_acquire("api")
@@ -344,5 +348,3 @@ class TestMultiRateLimiterGetLimiter:
         limiter1 = multi.get_limiter("api")
         limiter2 = multi.get_limiter("api")
         assert limiter1 is limiter2
-
-

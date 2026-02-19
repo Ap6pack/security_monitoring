@@ -207,9 +207,7 @@ class TestAPIError:
 
     def test_details_include_api_info(self) -> None:
         """Test that details are populated with API information."""
-        error = APIError(
-            "failed", api_name="test_api", status_code=404, response_body="not found"
-        )
+        error = APIError("failed", api_name="test_api", status_code=404, response_body="not found")
         assert error.details["api_name"] == "test_api"
         assert error.details["status_code"] == 404
         assert error.details["response_body"] == "not found"

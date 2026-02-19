@@ -83,9 +83,7 @@ class EmailAlerter:
         """
         try:
             # Filter findings by severity
-            filtered_findings = [
-                f for f in findings if self.should_alert(f, severity_threshold)
-            ]
+            filtered_findings = [f for f in findings if self.should_alert(f, severity_threshold)]
 
             if not filtered_findings:
                 logger.info(
@@ -123,9 +121,9 @@ class EmailAlerter:
     def should_alert(self, finding: Any, severity_threshold: str) -> bool:
         """Check if finding meets alert threshold."""
         finding_severity = getattr(finding, "severity", "LOW")
-        return self.SEVERITY_LEVELS.get(
-            finding_severity, 0
-        ) >= self.SEVERITY_LEVELS.get(severity_threshold, 0)
+        return self.SEVERITY_LEVELS.get(finding_severity, 0) >= self.SEVERITY_LEVELS.get(
+            severity_threshold, 0
+        )
 
     def _create_message(self, findings: list[Any], scan_id: str) -> MIMEMultipart:
         """Create email message with HTML content."""

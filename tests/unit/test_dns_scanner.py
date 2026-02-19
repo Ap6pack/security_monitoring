@@ -55,8 +55,7 @@ class TestDNSScanner:
 
         with patch.object(scanner._resolver, "resolve") as mock_resolve:
             mock_resolve.return_value = create_mock_dns_answer(
-                "AAAA",
-                ["2606:2800:220:1:248:1893:25c8:1946"]
+                "AAAA", ["2606:2800:220:1:248:1893:25c8:1946"]
             )
 
             result = await scanner.resolve(domain, "AAAA")
@@ -324,10 +323,14 @@ class TestDNSScanner:
 
         with patch("dns.asyncresolver.Resolver") as mock_resolver_class:
             mock_resolver1 = AsyncMock()
-            mock_resolver1.resolve = AsyncMock(return_value=create_mock_dns_answer("A", ["93.184.216.34"]))
+            mock_resolver1.resolve = AsyncMock(
+                return_value=create_mock_dns_answer("A", ["93.184.216.34"])
+            )
 
             mock_resolver2 = AsyncMock()
-            mock_resolver2.resolve = AsyncMock(return_value=create_mock_dns_answer("A", ["93.184.216.35"]))
+            mock_resolver2.resolve = AsyncMock(
+                return_value=create_mock_dns_answer("A", ["93.184.216.35"])
+            )
 
             mock_resolver_class.side_effect = [mock_resolver1, mock_resolver2]
 
@@ -356,4 +359,3 @@ class TestDNSScanner:
     async def test_close(self, scanner: DNSScanner) -> None:
         """Test cleanup method."""
         await scanner.close()  # Should not raise
-

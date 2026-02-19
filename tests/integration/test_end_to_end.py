@@ -53,10 +53,20 @@ class TestEndToEndScan:
         async with ScanOrchestrator(settings=settings, db=db) as orchestrator:
             # Mock at the subdomain scanner level to bypass crt.sh file fallback,
             # plus DNS scanner and HTTP client for detection verification.
-            with patch.object(orchestrator.subdomain_scanner, "scan", new_callable=AsyncMock) as mock_sub_scan, \
-                 patch.object(orchestrator.http_client, "fetch_text", new_callable=AsyncMock) as mock_http_fetch, \
-                 patch.object(orchestrator.dns_scanner, "scan", new_callable=AsyncMock) as mock_dns_scan, \
-                 patch.object(orchestrator.dns_scanner, "check_dangling_cname", new_callable=AsyncMock) as mock_check_dangling:
+            with (
+                patch.object(
+                    orchestrator.subdomain_scanner, "scan", new_callable=AsyncMock
+                ) as mock_sub_scan,
+                patch.object(
+                    orchestrator.http_client, "fetch_text", new_callable=AsyncMock
+                ) as mock_http_fetch,
+                patch.object(
+                    orchestrator.dns_scanner, "scan", new_callable=AsyncMock
+                ) as mock_dns_scan,
+                patch.object(
+                    orchestrator.dns_scanner, "check_dangling_cname", new_callable=AsyncMock
+                ) as mock_check_dangling,
+            ):
 
                 # Return discovered subdomains directly
                 mock_sub_scan.return_value = [
@@ -119,18 +129,21 @@ class TestEndToEndScan:
                 assert scan.status == "completed"
 
     @pytest.mark.asyncio
-    async def test_scan_with_no_findings(
-        self, settings: Settings, db: DatabaseManager
-    ) -> None:
+    async def test_scan_with_no_findings(self, settings: Settings, db: DatabaseManager) -> None:
         """Test scan that completes with no security findings."""
         async with ScanOrchestrator(settings=settings, db=db) as orchestrator:
-            with patch.object(orchestrator.http_client, "get", new_callable=AsyncMock) as mock_http_get, \
-                 patch.object(orchestrator.dns_scanner._resolver, "resolve") as mock_dns_resolve:
+            with (
+                patch.object(
+                    orchestrator.http_client, "get", new_callable=AsyncMock
+                ) as mock_http_get,
+                patch.object(orchestrator.dns_scanner._resolver, "resolve") as mock_dns_resolve,
+            ):
 
                 # Mock minimal responses
                 mock_http_get.return_value = []  # No subdomains
 
                 from tests.fixtures.mock_responses import create_mock_dns_answer
+
                 mock_dns_resolve.return_value = create_mock_dns_answer("A", ["93.184.216.34"])
 
                 result = await orchestrator.scan(["example.com"])
@@ -151,10 +164,20 @@ class TestEndToEndScan:
         """Test scanning multiple domains with different finding types."""
         async with ScanOrchestrator(settings=settings, db=db) as orchestrator:
             # Mock at subdomain scanner level to bypass crt.sh file fallback
-            with patch.object(orchestrator.subdomain_scanner, "scan", new_callable=AsyncMock) as mock_sub_scan, \
-                 patch.object(orchestrator.http_client, "fetch_text", new_callable=AsyncMock) as mock_http_fetch, \
-                 patch.object(orchestrator.dns_scanner, "scan", new_callable=AsyncMock) as mock_dns_scan, \
-                 patch.object(orchestrator.dns_scanner, "check_dangling_cname", new_callable=AsyncMock) as mock_check_dangling:
+            with (
+                patch.object(
+                    orchestrator.subdomain_scanner, "scan", new_callable=AsyncMock
+                ) as mock_sub_scan,
+                patch.object(
+                    orchestrator.http_client, "fetch_text", new_callable=AsyncMock
+                ) as mock_http_fetch,
+                patch.object(
+                    orchestrator.dns_scanner, "scan", new_callable=AsyncMock
+                ) as mock_dns_scan,
+                patch.object(
+                    orchestrator.dns_scanner, "check_dangling_cname", new_callable=AsyncMock
+                ) as mock_check_dangling,
+            ):
 
                 # Return discovered subdomains per domain
                 def sub_scan_side_effect(domain):
@@ -218,8 +241,12 @@ class TestEndToEndScan:
     ) -> None:
         """Test that scan completes even when some operations fail."""
         async with ScanOrchestrator(settings=settings, db=db) as orchestrator:
-            with patch.object(orchestrator.http_client, "get", new_callable=AsyncMock) as mock_http_get, \
-                 patch.object(orchestrator.dns_scanner._resolver, "resolve") as mock_dns_resolve:
+            with (
+                patch.object(
+                    orchestrator.http_client, "get", new_callable=AsyncMock
+                ) as mock_http_get,
+                patch.object(orchestrator.dns_scanner._resolver, "resolve") as mock_dns_resolve,
+            ):
 
                 # Mock successful subdomain discovery
                 mock_http_get.return_value = [
@@ -248,6 +275,7 @@ class TestEndToEndScan:
                         return create_mock_dns_answer("A", ["93.184.216.34"])
 
                     import dns.resolver
+
                     raise dns.resolver.NoAnswer()
 
                 mock_dns_resolve.side_effect = dns_side_effect
@@ -269,10 +297,18 @@ class TestEndToEndScan:
     ) -> None:
         """Test scan with findings of different severity levels."""
         async with ScanOrchestrator(settings=settings, db=db) as orchestrator:
-            with patch.object(orchestrator.dangling_detector, "detect", new_callable=AsyncMock) as mock_dang, \
-                 patch.object(orchestrator.takeover_detector, "detect", new_callable=AsyncMock) as mock_take, \
-                 patch.object(orchestrator.subdomain_scanner, "scan", new_callable=AsyncMock) as mock_sub, \
-                 patch.object(orchestrator.dns_scanner, "scan", new_callable=AsyncMock) as mock_dns:
+            with (
+                patch.object(
+                    orchestrator.dangling_detector, "detect", new_callable=AsyncMock
+                ) as mock_dang,
+                patch.object(
+                    orchestrator.takeover_detector, "detect", new_callable=AsyncMock
+                ) as mock_take,
+                patch.object(
+                    orchestrator.subdomain_scanner, "scan", new_callable=AsyncMock
+                ) as mock_sub,
+                patch.object(orchestrator.dns_scanner, "scan", new_callable=AsyncMock) as mock_dns,
+            ):
 
                 mock_sub.return_value = []
                 mock_dns.return_value = []
@@ -353,10 +389,18 @@ class TestEndToEndScan:
     ) -> None:
         """Test that similar findings are deduplicated across multiple scans."""
         async with ScanOrchestrator(settings=settings, db=db) as orchestrator:
-            with patch.object(orchestrator.subdomain_scanner, "scan", new_callable=AsyncMock) as mock_sub, \
-                 patch.object(orchestrator.dns_scanner, "scan", new_callable=AsyncMock) as mock_dns, \
-                 patch.object(orchestrator.dangling_detector, "detect", new_callable=AsyncMock) as mock_dang, \
-                 patch.object(orchestrator.takeover_detector, "detect", new_callable=AsyncMock) as mock_take:
+            with (
+                patch.object(
+                    orchestrator.subdomain_scanner, "scan", new_callable=AsyncMock
+                ) as mock_sub,
+                patch.object(orchestrator.dns_scanner, "scan", new_callable=AsyncMock) as mock_dns,
+                patch.object(
+                    orchestrator.dangling_detector, "detect", new_callable=AsyncMock
+                ) as mock_dang,
+                patch.object(
+                    orchestrator.takeover_detector, "detect", new_callable=AsyncMock
+                ) as mock_take,
+            ):
 
                 mock_sub.return_value = []
                 mock_dns.return_value = []
@@ -414,10 +458,18 @@ class TestEndToEndScan:
     ) -> None:
         """Test complete workflow produces data suitable for reporting."""
         async with ScanOrchestrator(settings=settings, db=db) as orchestrator:
-            with patch.object(orchestrator.subdomain_scanner, "scan", new_callable=AsyncMock) as mock_sub, \
-                 patch.object(orchestrator.dns_scanner, "scan", new_callable=AsyncMock) as mock_dns, \
-                 patch.object(orchestrator.dangling_detector, "detect", new_callable=AsyncMock) as mock_dang, \
-                 patch.object(orchestrator.takeover_detector, "detect", new_callable=AsyncMock) as mock_take:
+            with (
+                patch.object(
+                    orchestrator.subdomain_scanner, "scan", new_callable=AsyncMock
+                ) as mock_sub,
+                patch.object(orchestrator.dns_scanner, "scan", new_callable=AsyncMock) as mock_dns,
+                patch.object(
+                    orchestrator.dangling_detector, "detect", new_callable=AsyncMock
+                ) as mock_dang,
+                patch.object(
+                    orchestrator.takeover_detector, "detect", new_callable=AsyncMock
+                ) as mock_take,
+            ):
 
                 mock_sub.return_value = [
                     SubdomainResult(domain="www.example.com", source="crtsh"),

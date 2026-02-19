@@ -113,9 +113,7 @@ class TestScanCommand:
         mock_load_settings.return_value = mock_settings
         mock_asyncio.run.side_effect = _mock_asyncio_run
 
-        result = runner.invoke(
-            app, ["scan", "--domain", "example.com", "--domain", "test.com"]
-        )
+        result = runner.invoke(app, ["scan", "--domain", "example.com", "--domain", "test.com"])
         assert result.exit_code == 0
         assert "Scanning 2 domain(s)" in result.output
 
@@ -136,9 +134,7 @@ class TestScanCommand:
         domains_file = tmp_path / "domains.txt"
         domains_file.write_text("example.com\ntest.com\n# comment line\n\nextra.com\n")
 
-        result = runner.invoke(
-            app, ["scan", "--domains-file", str(domains_file)]
-        )
+        result = runner.invoke(app, ["scan", "--domains-file", str(domains_file)])
         assert result.exit_code == 0
         assert "Scanning 3 domain(s)" in result.output
 
@@ -156,9 +152,7 @@ class TestScanCommand:
 
         nonexistent_file = tmp_path / "nonexistent.txt"
 
-        result = runner.invoke(
-            app, ["scan", "--domains-file", str(nonexistent_file)]
-        )
+        result = runner.invoke(app, ["scan", "--domains-file", str(nonexistent_file)])
         assert result.exit_code == 1
         assert "Domains file not found" in result.output
 
@@ -207,9 +201,7 @@ class TestScanCommand:
         domains_file = tmp_path / "empty_domains.txt"
         domains_file.write_text("# only comments\n\n# another comment\n")
 
-        result = runner.invoke(
-            app, ["scan", "--domains-file", str(domains_file)]
-        )
+        result = runner.invoke(app, ["scan", "--domains-file", str(domains_file)])
         assert result.exit_code == 1
         assert "No domains specified" in result.output
 
@@ -275,9 +267,7 @@ class TestScanCommand:
         mock_load_settings.return_value = mock_settings
         mock_asyncio.run.side_effect = _mock_asyncio_run
 
-        result = runner.invoke(
-            app, ["scan", "--domain", "example.com", "--verbose"]
-        )
+        result = runner.invoke(app, ["scan", "--domain", "example.com", "--verbose"])
         assert result.exit_code == 0
 
 
@@ -527,15 +517,11 @@ class TestReportCommand:
         mock_load_settings.return_value = mock_settings
         mock_asyncio.run.side_effect = _mock_asyncio_run
 
-        result = runner.invoke(
-            app, ["report", "--scan-id", "test-scan-123"]
-        )
+        result = runner.invoke(app, ["report", "--scan-id", "test-scan-123"])
         assert result.exit_code == 0
 
     @patch("security_scanner.main.load_settings")
-    def test_report_invalid_format(
-        self, mock_load_settings: MagicMock, tmp_path: Path
-    ) -> None:
+    def test_report_invalid_format(self, mock_load_settings: MagicMock, tmp_path: Path) -> None:
         """Test report with invalid format shows error."""
         mock_settings = MagicMock()
         mock_settings.report_output_dir = tmp_path / "reports"
@@ -663,9 +649,7 @@ class TestValidateConfigCommand:
         assert "Subdomain sources" in result.output
 
     @patch("security_scanner.main.load_settings")
-    def test_validate_config_shows_settings_values(
-        self, mock_load_settings: MagicMock
-    ) -> None:
+    def test_validate_config_shows_settings_values(self, mock_load_settings: MagicMock) -> None:
         """Test validate-config displays actual settings values."""
         mock_settings = MagicMock()
         mock_settings.database_path = Path("data/security_scanner.db")
@@ -683,9 +667,7 @@ class TestValidateConfigCommand:
     @patch("security_scanner.main.load_settings")
     def test_validate_config_error(self, mock_load_settings: MagicMock) -> None:
         """Test validate-config with invalid configuration shows error."""
-        mock_load_settings.side_effect = ValueError(
-            "Invalid DNS nameserver format"
-        )
+        mock_load_settings.side_effect = ValueError("Invalid DNS nameserver format")
 
         result = runner.invoke(app, ["validate-config"])
         assert result.exit_code == 1
@@ -693,13 +675,9 @@ class TestValidateConfigCommand:
         assert "Invalid DNS nameserver format" in result.output
 
     @patch("security_scanner.main.load_settings")
-    def test_validate_config_file_not_found(
-        self, mock_load_settings: MagicMock
-    ) -> None:
+    def test_validate_config_file_not_found(self, mock_load_settings: MagicMock) -> None:
         """Test validate-config when config file cannot be loaded."""
-        mock_load_settings.side_effect = FileNotFoundError(
-            "Config file not found"
-        )
+        mock_load_settings.side_effect = FileNotFoundError("Config file not found")
 
         result = runner.invoke(app, ["validate-config"])
         assert result.exit_code == 1

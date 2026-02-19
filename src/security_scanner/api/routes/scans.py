@@ -127,7 +127,11 @@ async def create_scan(
     scan_id = await db.create_scan(scan)
 
     background_tasks.add_task(
-        _run_scan_background, orchestrator, db, scan_id, request.domains,
+        _run_scan_background,
+        orchestrator,
+        db,
+        scan_id,
+        request.domains,
     )
 
     return ScanCreatedResponse(

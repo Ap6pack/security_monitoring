@@ -58,12 +58,14 @@ class TestScanScheduler:
 
     async def test_run_scan_success(self, scheduler, settings, db):
         mock_orchestrator = AsyncMock()
-        mock_orchestrator.scan = AsyncMock(return_value={
-            "scan_id": "test-123",
-            "domains": ["example.com"],
-            "findings": [],
-            "summary": {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 0, "LOW": 0},
-        })
+        mock_orchestrator.scan = AsyncMock(
+            return_value={
+                "scan_id": "test-123",
+                "domains": ["example.com"],
+                "findings": [],
+                "summary": {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 0, "LOW": 0},
+            }
+        )
         mock_orchestrator.__aenter__ = AsyncMock(return_value=mock_orchestrator)
         mock_orchestrator.__aexit__ = AsyncMock()
 
@@ -119,21 +121,24 @@ class TestScanScheduler:
     async def test_start_and_stop(self, scheduler, settings, db):
         """Test that start loop runs one scan and stops when signaled."""
         mock_orchestrator = AsyncMock()
-        mock_orchestrator.scan = AsyncMock(return_value={
-            "scan_id": "test-456",
-            "domains": ["example.com"],
-            "findings": [],
-            "summary": {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 0, "LOW": 0},
-        })
+        mock_orchestrator.scan = AsyncMock(
+            return_value={
+                "scan_id": "test-456",
+                "domains": ["example.com"],
+                "findings": [],
+                "summary": {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 0, "LOW": 0},
+            }
+        )
         mock_orchestrator.__aenter__ = AsyncMock(return_value=mock_orchestrator)
         mock_orchestrator.__aexit__ = AsyncMock()
 
-        with patch.object(scheduler, '_run_scan', wraps=scheduler._run_scan):
+        with patch.object(scheduler, "_run_scan", wraps=scheduler._run_scan):
             # Replace orchestrator creation in start
             with patch(
                 "security_scanner.scheduler.ScanOrchestrator",
                 return_value=mock_orchestrator,
             ):
+
                 async def stop_on_sleep(seconds):
                     await scheduler.stop()
 

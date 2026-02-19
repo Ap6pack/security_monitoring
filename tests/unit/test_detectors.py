@@ -48,11 +48,13 @@ class TestDanglingDNSDetector:
 
         mock_dns_scanner.check_dangling_cname.return_value = (True, "old-service.herokuapp.com")
 
-        findings = await detector.detect({
-            "domain": domain,
-            "dns_records": dns_records,
-            "scan_id": scan_id,
-        })
+        findings = await detector.detect(
+            {
+                "domain": domain,
+                "dns_records": dns_records,
+                "scan_id": scan_id,
+            }
+        )
 
         assert len(findings) == 1
         finding = findings[0]
@@ -80,11 +82,13 @@ class TestDanglingDNSDetector:
 
         mock_dns_scanner.check_dangling_cname.return_value = (False, "cdn.example.com")
 
-        findings = await detector.detect({
-            "domain": "www.example.com",
-            "dns_records": dns_records,
-            "scan_id": "test-scan",
-        })
+        findings = await detector.detect(
+            {
+                "domain": "www.example.com",
+                "dns_records": dns_records,
+                "scan_id": "test-scan",
+            }
+        )
 
         assert len(findings) == 0
 
@@ -104,11 +108,13 @@ class TestDanglingDNSDetector:
             )
         ]
 
-        findings = await detector.detect({
-            "domain": "nonexistent.example.com",
-            "dns_records": dns_records,
-            "scan_id": "test-scan",
-        })
+        findings = await detector.detect(
+            {
+                "domain": "nonexistent.example.com",
+                "dns_records": dns_records,
+                "scan_id": "test-scan",
+            }
+        )
 
         assert len(findings) == 1
         finding = findings[0]
@@ -140,11 +146,13 @@ class TestDanglingDNSDetector:
             )
         ]
 
-        findings = await detector.detect({
-            "domain": "example.com",
-            "dns_records": dns_records,
-            "scan_id": "test-scan",
-        })
+        findings = await detector.detect(
+            {
+                "domain": "example.com",
+                "dns_records": dns_records,
+                "scan_id": "test-scan",
+            }
+        )
 
         # Should not call check_dangling_cname
         mock_dns_scanner.check_dangling_cname.assert_not_called()
@@ -307,11 +315,13 @@ class TestTakeoverDetector:
         # Mock HTTP response
         mock_http_client.fetch_text.return_value = get_mock_http_response("heroku_takeover")
 
-        findings = await detector.detect({
-            "domain": domain,
-            "dns_records": dns_records,
-            "scan_id": scan_id,
-        })
+        findings = await detector.detect(
+            {
+                "domain": domain,
+                "dns_records": dns_records,
+                "scan_id": scan_id,
+            }
+        )
 
         assert len(findings) == 1
         finding = findings[0]
@@ -350,11 +360,13 @@ class TestTakeoverDetector:
 
         mock_http_client.fetch_text.return_value = get_mock_http_response("github_pages_takeover")
 
-        findings = await detector.detect({
-            "domain": domain,
-            "dns_records": dns_records,
-            "scan_id": "test-scan",
-        })
+        findings = await detector.detect(
+            {
+                "domain": domain,
+                "dns_records": dns_records,
+                "scan_id": "test-scan",
+            }
+        )
 
         assert len(findings) == 1
         assert findings[0].platform == "GitHub Pages"
@@ -374,11 +386,13 @@ class TestTakeoverDetector:
             )
         ]
 
-        findings = await detector.detect({
-            "domain": "www.example.com",
-            "dns_records": dns_records,
-            "scan_id": "test-scan",
-        })
+        findings = await detector.detect(
+            {
+                "domain": "www.example.com",
+                "dns_records": dns_records,
+                "scan_id": "test-scan",
+            }
+        )
 
         assert len(findings) == 0
 
@@ -406,11 +420,13 @@ class TestTakeoverDetector:
             nameserver="8.8.8.8",
         )
 
-        findings = await detector.detect({
-            "domain": "app.example.com",
-            "dns_records": dns_records,
-            "scan_id": "test-scan",
-        })
+        findings = await detector.detect(
+            {
+                "domain": "app.example.com",
+                "dns_records": dns_records,
+                "scan_id": "test-scan",
+            }
+        )
 
         # Should not detect takeover if target resolves
         assert len(findings) == 0
@@ -442,11 +458,13 @@ class TestTakeoverDetector:
         # HTTP response doesn't match platform pattern
         mock_http_client.fetch_text.return_value = get_mock_http_response("normal_website")
 
-        findings = await detector.detect({
-            "domain": "api.example.com",
-            "dns_records": dns_records,
-            "scan_id": "test-scan",
-        })
+        findings = await detector.detect(
+            {
+                "domain": "api.example.com",
+                "dns_records": dns_records,
+                "scan_id": "test-scan",
+            }
+        )
 
         # Should still detect with medium confidence (DNS error matches but HTTP doesn't)
         assert len(findings) == 1
@@ -471,11 +489,13 @@ class TestTakeoverDetector:
             )
         ]
 
-        findings = await detector.detect({
-            "domain": "example.com",
-            "dns_records": dns_records,
-            "scan_id": "test-scan",
-        })
+        findings = await detector.detect(
+            {
+                "domain": "example.com",
+                "dns_records": dns_records,
+                "scan_id": "test-scan",
+            }
+        )
 
         assert len(findings) == 0
 

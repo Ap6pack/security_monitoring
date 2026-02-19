@@ -93,7 +93,7 @@ class MockDNSAnswer:
     def __init__(self, values: list[Any], ttl: int = 300):
         """Initialize mock DNS answer."""
         self.values = values
-        self.rrset = type('obj', (object,), {'ttl': ttl})()
+        self.rrset = type("obj", (object,), {"ttl": ttl})()
 
     def __iter__(self):
         """Iterate over values."""

@@ -231,7 +231,9 @@ class TestGet:
         client = HTTPClient(max_retries=1)
 
         mock_ctx = MagicMock()
-        mock_ctx.__aenter__ = AsyncMock(side_effect=aiohttp.ClientConnectionError("Connection refused"))
+        mock_ctx.__aenter__ = AsyncMock(
+            side_effect=aiohttp.ClientConnectionError("Connection refused")
+        )
         mock_ctx.__aexit__ = AsyncMock(return_value=False)
 
         mock_session = MagicMock()
@@ -442,9 +444,7 @@ class TestPost:
         client = HTTPClient(max_retries=1)
         mock_session = MagicMock()
         mock_session.closed = False
-        mock_session.post = MagicMock(
-            return_value=_make_mock_response(status=200, json_data={})
-        )
+        mock_session.post = MagicMock(return_value=_make_mock_response(status=200, json_data={}))
         client._session = mock_session
         client._rate_limiter = MagicMock()
         client._rate_limiter.acquire = AsyncMock()
@@ -458,9 +458,7 @@ class TestPost:
         client = HTTPClient(max_retries=1)
         mock_session = MagicMock()
         mock_session.closed = False
-        mock_session.post = MagicMock(
-            return_value=_make_mock_response(status=200, json_data={})
-        )
+        mock_session.post = MagicMock(return_value=_make_mock_response(status=200, json_data={}))
         client._session = mock_session
         client._rate_limiter = MagicMock()
         client._rate_limiter.acquire = AsyncMock()
@@ -583,9 +581,7 @@ class TestFetchText:
         client = HTTPClient(max_retries=1)
         mock_session = MagicMock()
         mock_session.closed = False
-        mock_session.get = MagicMock(
-            return_value=_make_mock_response(status=200, text_data="ok")
-        )
+        mock_session.get = MagicMock(return_value=_make_mock_response(status=200, text_data="ok"))
         client._session = mock_session
         client._rate_limiter = MagicMock()
         client._rate_limiter.acquire = AsyncMock()

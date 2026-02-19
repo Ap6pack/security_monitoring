@@ -141,9 +141,7 @@ class TestSlackAlerter:
     def test_should_alert_high(self) -> None:
         """Test alert threshold for HIGH findings."""
         mock_http = MagicMock()
-        alerter = SlackAlerter(
-            webhook_url="https://hooks.slack.com/test", http_client=mock_http
-        )
+        alerter = SlackAlerter(webhook_url="https://hooks.slack.com/test", http_client=mock_http)
 
         high_finding = MockFinding("HIGH")
         assert alerter.should_alert(high_finding, "HIGH")
@@ -152,9 +150,7 @@ class TestSlackAlerter:
     def test_should_alert_threshold(self) -> None:
         """Test alert threshold filtering."""
         mock_http = MagicMock()
-        alerter = SlackAlerter(
-            webhook_url="https://hooks.slack.com/test", http_client=mock_http
-        )
+        alerter = SlackAlerter(webhook_url="https://hooks.slack.com/test", http_client=mock_http)
 
         medium_finding = MockFinding("MEDIUM")
         assert not alerter.should_alert(medium_finding, "HIGH")
@@ -209,9 +205,7 @@ class TestSlackAlerter:
     def test_create_payload(self, sample_findings: list[MockFinding]) -> None:
         """Test Slack payload creation."""
         mock_http = MagicMock()
-        alerter = SlackAlerter(
-            webhook_url="https://hooks.slack.com/test", http_client=mock_http
-        )
+        alerter = SlackAlerter(webhook_url="https://hooks.slack.com/test", http_client=mock_http)
 
         payload = alerter._create_payload(sample_findings, "test-scan-1")
 

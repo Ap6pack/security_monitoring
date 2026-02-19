@@ -43,7 +43,8 @@ class TestMonitorDaemon:
             await asyncio.sleep(0.05)
             daemon._shutdown_event.set()
 
-        with patch.object(daemon, '_handle_signal'):
+        with patch.object(daemon, "_handle_signal"):
+
             async def run_without_signals():
                 scheduler_task = asyncio.create_task(daemon.scheduler.start())
                 await daemon._shutdown_event.wait()

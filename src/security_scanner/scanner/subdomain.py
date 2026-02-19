@@ -120,7 +120,9 @@ class SubdomainScanner:
                     data = json.load(f)
 
                 if not isinstance(data, list):
-                    logger.warning("Invalid crt.sh JSON file format", file=str(self.crtsh_json_file))
+                    logger.warning(
+                        "Invalid crt.sh JSON file format", file=str(self.crtsh_json_file)
+                    )
                     data = None
             except Exception as e:
                 logger.warning(
