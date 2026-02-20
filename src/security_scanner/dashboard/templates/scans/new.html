@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}New Scan{% endblock %}
+{% block content %}
+<h2>Start New Scan</h2>
+
+<form hx-post="/dashboard/scans/new" hx-target="#scan-result" hx-swap="innerHTML">
+    <label for="domains">
+        Domains to scan
+        <textarea id="domains" name="domains" placeholder="example.com&#10;api.example.com&#10;test.com" rows="5" required></textarea>
+        <small>Enter one domain per line.</small>
+    </label>
+    <button type="submit">Start Scan</button>
+</form>
+
+<div id="scan-result"></div>
+{% endblock %}

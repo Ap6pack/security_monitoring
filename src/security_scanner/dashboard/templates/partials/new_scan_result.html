@@ -1,0 +1,15 @@
+{% if error %}
+<article style="border-left: 4px solid {{ severity_color('CRITICAL') }}">
+    <strong>Error:</strong> {{ error }}
+</article>
+{% else %}
+<article style="border-left: 4px solid {{ status_color('running') }}">
+    <p>Scan started successfully.</p>
+    <p>
+        <strong>Scan ID:</strong> <a href="/dashboard/scans/{{ scan_id }}">{{ scan_id[:8] }}…</a><br>
+        <strong>Domains:</strong> {{ domains | join(", ") }}<br>
+        <strong>Status:</strong> <span class="badge" style="background: {{ status_color('running') }}">running</span>
+    </p>
+    <a href="/dashboard/scans/{{ scan_id }}" role="button" class="outline">View Scan</a>
+</article>
+{% endif %}

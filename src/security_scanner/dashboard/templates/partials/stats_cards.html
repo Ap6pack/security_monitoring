@@ -1,0 +1,26 @@
+<div class="grid">
+    <article>
+        <header>Total Scans</header>
+        <p class="stat-number">{{ stats.total_scans }}</p>
+        <footer>{{ stats.scans_last_24h }} in last 24h</footer>
+    </article>
+    <article>
+        <header>Running</header>
+        <p class="stat-number" style="color: {{ status_color('running') }}">{{ stats.running_scans }}</p>
+        <footer>&nbsp;</footer>
+    </article>
+    <article>
+        <header>Total Findings</header>
+        <p class="stat-number">{{ stats.total_findings }}</p>
+        <footer>&nbsp;</footer>
+    </article>
+    <article>
+        <header>Critical</header>
+        <p class="stat-number" style="color: {{ severity_color('CRITICAL') }}">{{ stats.findings_by_severity.CRITICAL }}</p>
+        <footer>
+            <span style="color: {{ severity_color('HIGH') }}">{{ stats.findings_by_severity.HIGH }} High</span> &middot;
+            <span style="color: {{ severity_color('MEDIUM') }}">{{ stats.findings_by_severity.MEDIUM }} Med</span> &middot;
+            <span>{{ stats.findings_by_severity.LOW }} Low</span>
+        </footer>
+    </article>
+</div>

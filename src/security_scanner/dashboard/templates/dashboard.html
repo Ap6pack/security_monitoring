@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Overview{% endblock %}
+{% block content %}
+<h2>Dashboard</h2>
+
+<div hx-get="/dashboard/partials/stats" hx-trigger="every 10s" hx-swap="innerHTML" id="stats-section">
+    {% include "partials/stats_cards.html" %}
+</div>
+
+<h3>Recent Scans</h3>
+<div class="overflow-auto">
+    <table>
+        <thead>
+            <tr>
+                <th>Scan ID</th>
+                <th>Status</th>
+                <th>Domains</th>
+                <th>Findings</th>
+                <th>Started</th>
+            </tr>
+        </thead>
+        <tbody id="recent-scans-body"
+            {% if has_running %}hx-get="/dashboard/partials/scan-table?limit=5" hx-trigger="every 3s" hx-swap="innerHTML"{% endif %}>
+            {% include "partials/scan_table.html" %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

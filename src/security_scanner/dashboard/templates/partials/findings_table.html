@@ -1,0 +1,13 @@
+{% for f in findings %}
+<tr>
+    <td><span class="badge" style="background: {{ severity_color(f.severity) }}{% if f.severity == 'MEDIUM' %}; color: #333{% endif %}">{{ f.severity }}</span></td>
+    <td>{{ f.domain }}</td>
+    <td>{{ f.type }}</td>
+    <td>{{ truncate(f.description) }}</td>
+    <td>{{ "%.1f" | format(f.cvss_score) if f.cvss_score else "—" }}</td>
+    <td><a href="/dashboard/scans/{{ f.scan_id }}">{{ f.scan_id[:8] }}…</a></td>
+    <td>{{ time_ago(f.detected_at) }}</td>
+</tr>
+{% else %}
+<tr><td colspan="7"><em>No findings match the current filters.</em></td></tr>
+{% endfor %}

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Dashboard{% endblock %} | Security Scanner</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+    <link rel="stylesheet" href="/dashboard/static/dashboard.css">
+</head>
+<body>
+    <nav class="container-fluid">
+        <ul>
+            <li><strong>Security Scanner</strong></li>
+        </ul>
+        <ul>
+            <li><a href="/dashboard"{% if active_page == "overview" %} class="active"{% endif %}>Overview</a></li>
+            <li><a href="/dashboard/scans"{% if active_page == "scans" %} class="active"{% endif %}>Scans</a></li>
+            <li><a href="/dashboard/findings"{% if active_page == "findings" %} class="active"{% endif %}>Findings</a></li>
+            <li><a href="/dashboard/scans/new" role="button" class="outline">New Scan</a></li>
+        </ul>
+    </nav>
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+    <footer class="container">
+        <hr>
+        <small>Security Scanner v{{ version }} &middot; <a href="/docs">API Docs</a></small>
+    </footer>
+</body>
+</html>

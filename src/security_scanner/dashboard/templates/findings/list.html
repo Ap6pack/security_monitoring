@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}Findings{% endblock %}
+{% block content %}
+<hgroup>
+    <h2>Findings Browser</h2>
+    <p>{{ total }} findings total</p>
+</hgroup>
+
+<form hx-get="/dashboard/partials/findings" hx-target="#findings-body" hx-swap="innerHTML" hx-trigger="change from:select, change from:input" hx-include="[name]">
+    <div class="grid">
+        <label>
+            Severity
+            <select name="severity">
+                <option value="">All</option>
+                <option value="CRITICAL"{% if filters.severity == "CRITICAL" %} selected{% endif %}>Critical</option>
+                <option value="HIGH"{% if filters.severity == "HIGH" %} selected{% endif %}>High</option>
+                <option value="MEDIUM"{% if filters.severity == "MEDIUM" %} selected{% endif %}>Medium</option>
+                <option value="LOW"{% if filters.severity == "LOW" %} selected{% endif %}>Low</option>
+            </select>
+        </label>
+        <label>
+            Domain
+            <input type="search" name="domain" value="{{ filters.domain or '' }}" placeholder="Filter by domain…" hx-trigger="keyup changed delay:300ms">
+        </label>
+        <label>
+            Type
+            <select name="type">
+                <option value="">All</option>
+                {% for t in finding_types %}
+                <option value="{{ t }}"{% if filters.type == t %} selected{% endif %}>{{ t }}</option>
+                {% endfor %}
+            </select>
+        </label>
+    </div>
+</form>
+
+<div class="overflow-auto">
+    <table>
+        <thead>
+            <tr>
+                <th>Severity</th>
+                <th>Domain</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>CVSS</th>
+                <th>Scan</th>
+                <th>Detected</th>
+            </tr>
+        </thead>
+        <tbody id="findings-body">
+            {% include "partials/findings_table.html" %}
+        </tbody>
+    </table>
+</div>
+
+{% if total > limit %}
+<nav>
+    <ul>
+        {% if page > 1 %}
+        <li><a href="/dashboard/findings?page={{ page - 1 }}&limit={{ limit }}&severity={{ filters.severity or '' }}&domain={{ filters.domain or '' }}&type={{ filters.type or '' }}">&laquo; Previous</a></li>
+        {% endif %}
+        <li><small>Page {{ page }} of {{ (total + limit - 1) // limit }}</small></li>
+        {% if page * limit < total %}
+        <li><a href="/dashboard/findings?page={{ page + 1 }}&limit={{ limit }}&severity={{ filters.severity or '' }}&domain={{ filters.domain or '' }}&type={{ filters.type or '' }}">Next &raquo;</a></li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}

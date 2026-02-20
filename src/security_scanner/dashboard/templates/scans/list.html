@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Scans{% endblock %}
+{% block content %}
+<hgroup>
+    <h2>Scan History</h2>
+    <p>{{ total }} scans total</p>
+</hgroup>
+
+<div class="overflow-auto">
+    <table>
+        <thead>
+            <tr>
+                <th>Scan ID</th>
+                <th>Status</th>
+                <th>Domains</th>
+                <th>Findings</th>
+                <th>Started</th>
+                <th>Duration</th>
+            </tr>
+        </thead>
+        <tbody id="scan-table-body"
+            {% if has_running %}hx-get="/dashboard/partials/scan-table?limit={{ limit }}&page={{ page }}" hx-trigger="every 3s" hx-swap="innerHTML"{% endif %}>
+            {% for scan in scans %}
+            <tr>
+                <td><a href="/dashboard/scans/{{ scan.id }}">{{ scan.id[:8] }}…</a></td>
+                <td>
+                    <span class="badge" style="background: {{ status_color(scan.status) }}">
+                        {{ scan.status }}
+                        {% if scan.status == "running" %}<span aria-busy="true"></span>{% endif %}
+                    </span>
+                </td>
+                <td>{{ scan.domains_scanned | join(", ") }}</td>
+                <td>
+                    {% if scan.critical_findings %}<span class="badge" style="background: {{ severity_color('CRITICAL') }}">{{ scan.critical_findings }}C</span> {% endif %}
+                    {% if scan.high_findings %}<span class="badge" style="background: {{ severity_color('HIGH') }}">{{ scan.high_findings }}H</span> {% endif %}
+                    {% if scan.medium_findings %}<span class="badge" style="background: {{ severity_color('MEDIUM') }}; color: #333">{{ scan.medium_findings }}M</span> {% endif %}
+                    {% if scan.low_findings %}<span class="badge" style="background: {{ severity_color('LOW') }}">{{ scan.low_findings }}L</span> {% endif %}
+                    {% if not scan.total_findings %}—{% endif %}
+                </td>
+                <td>{{ time_ago(scan.start_time) }}</td>
+                <td>{{ format_duration(scan.duration_seconds) }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="6"><em>No scans found.</em></td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% if total > limit %}
+<nav>
+    <ul>
+        {% if page > 1 %}
+        <li><a href="/dashboard/scans?page={{ page - 1 }}&limit={{ limit }}">&laquo; Previous</a></li>
+        {% endif %}
+        <li><small>Page {{ page }} of {{ (total + limit - 1) // limit }}</small></li>
+        {% if page * limit < total %}
+        <li><a href="/dashboard/scans?page={{ page + 1 }}&limit={{ limit }}">Next &raquo;</a></li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}

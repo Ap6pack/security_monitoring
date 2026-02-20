@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Scan {{ scan.id[:8] }}{% endblock %}
+{% block content %}
+<hgroup>
+    <h2>Scan {{ scan.id[:8] }}…</h2>
+    <p>
+        <span id="scan-status"
+            {% if scan.status == "running" %}
+            hx-get="/dashboard/partials/scan-status/{{ scan.id }}"
+            hx-trigger="every 3s"
+            hx-swap="outerHTML"
+            {% endif %}>
+            <span class="badge" style="background: {{ status_color(scan.status) }}">
+                {{ scan.status }}
+                {% if scan.status == "running" %}<span aria-busy="true"></span>{% endif %}
+            </span>
+        </span>
+    </p>
+</hgroup>
+
+<div class="grid">
+    <div>
+        <strong>Domains:</strong> {{ scan.domains_scanned | join(", ") }}
+    </div>
+    <div>
+        <strong>Started:</strong> {{ scan.start_time.strftime("%Y-%m-%d %H:%M:%S") if scan.start_time else "—" }}
+    </div>
+    <div>
+        <strong>Duration:</strong> {{ format_duration(scan.duration_seconds) }}
+    </div>
+    <div>
+        <strong>ID:</strong> <code>{{ scan.id }}</code>
+    </div>
+</div>
+
+<hr>
+
+<div class="grid">
+    <article>
+        <header style="color: {{ severity_color('CRITICAL') }}">Critical</header>
+        <p class="stat-number" style="color: {{ severity_color('CRITICAL') }}">{{ scan.critical_findings }}</p>
+    </article>
+    <article>
+        <header style="color: {{ severity_color('HIGH') }}">High</header>
+        <p class="stat-number" style="color: {{ severity_color('HIGH') }}">{{ scan.high_findings }}</p>
+    </article>
+    <article>
+        <header style="color: {{ severity_color('MEDIUM') }}">Medium</header>
+        <p class="stat-number" style="color: {{ severity_color('MEDIUM') }}">{{ scan.medium_findings }}</p>
+    </article>
+    <article>
+        <header style="color: {{ severity_color('LOW') }}">Low</header>
+        <p class="stat-number" style="color: {{ severity_color('LOW') }}">{{ scan.low_findings }}</p>
+    </article>
+</div>
+
+<h3>Findings</h3>
+
+<details>
+    <summary>Filter by severity</summary>
+    <div class="filter-bar">
+        <a href="/dashboard/scans/{{ scan.id }}" role="button" class="outline{% if not severity_filter %} contrast{% endif %}">All</a>
+        <a href="/dashboard/scans/{{ scan.id }}?severity=CRITICAL" role="button" class="outline{% if severity_filter == 'CRITICAL' %} contrast{% endif %}" style="border-color: {{ severity_color('CRITICAL') }}">Critical</a>
+        <a href="/dashboard/scans/{{ scan.id }}?severity=HIGH" role="button" class="outline{% if severity_filter == 'HIGH' %} contrast{% endif %}" style="border-color: {{ severity_color('HIGH') }}">High</a>
+        <a href="/dashboard/scans/{{ scan.id }}?severity=MEDIUM" role="button" class="outline{% if severity_filter == 'MEDIUM' %} contrast{% endif %}" style="border-color: {{ severity_color('MEDIUM') }}">Medium</a>
+        <a href="/dashboard/scans/{{ scan.id }}?severity=LOW" role="button" class="outline{% if severity_filter == 'LOW' %} contrast{% endif %}" style="border-color: {{ severity_color('LOW') }}">Low</a>
+    </div>
+</details>
+
+<div class="overflow-auto">
+    <table>
+        <thead>
+            <tr>
+                <th>Severity</th>
+                <th>Domain</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>CVSS</th>
+                <th>Confidence</th>
+            </tr>
+        </thead>
+        <tbody id="findings-body">
+            {% include "partials/scan_findings.html" %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

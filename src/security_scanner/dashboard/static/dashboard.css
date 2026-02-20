@@ -1,0 +1,58 @@
+/* Dashboard custom styles — supplements Pico CSS */
+
+.badge {
+    display: inline-block;
+    padding: 0.15em 0.5em;
+    border-radius: 4px;
+    font-size: 0.8em;
+    font-weight: 600;
+    color: #fff;
+    white-space: nowrap;
+}
+
+.stat-number {
+    font-size: 2.2rem;
+    font-weight: 700;
+    margin: 0;
+    text-align: center;
+}
+
+article > header {
+    text-align: center;
+    font-weight: 600;
+}
+
+article > footer {
+    text-align: center;
+    font-size: 0.85em;
+}
+
+.filter-bar {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+}
+
+.filter-bar a[role="button"] {
+    padding: 0.3em 0.8em;
+    font-size: 0.85em;
+}
+
+nav a.active {
+    font-weight: 700;
+    text-decoration: underline;
+}
+
+.overflow-auto {
+    overflow-x: auto;
+}
+
+/* Scan status spinner alignment */
+.badge [aria-busy="true"] {
+    display: inline-block;
+    width: 0.8em;
+    height: 0.8em;
+    margin-left: 0.3em;
+    vertical-align: middle;
+}

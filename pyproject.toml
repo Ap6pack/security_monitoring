@@ -42,6 +42,7 @@ dependencies = [
     "validators>=0.22.0",
     "aiofiles>=23.2.0",
     "fastapi>=0.109.0",
+    "python-multipart>=0.0.6",
     "uvicorn[standard]>=0.27.0",
     "httpx>=0.26.0",
 ]
@@ -70,7 +71,12 @@ security-scanner = "security_scanner.main:app"
 where = ["src"]
 
 [tool.setuptools.package-data]
-security_scanner = ["py.typed", "reporters/templates/*.html"]
+security_scanner = [
+    "py.typed",
+    "reporters/templates/*.html",
+    "dashboard/templates/**/*.html",
+    "dashboard/static/*.css",
+]
 
 [tool.black]
 line-length = 100

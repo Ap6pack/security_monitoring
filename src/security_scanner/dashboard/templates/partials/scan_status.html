@@ -1,0 +1,11 @@
+<span id="scan-status"
+    {% if scan.status == "running" %}
+    hx-get="/dashboard/partials/scan-status/{{ scan.id }}"
+    hx-trigger="every 3s"
+    hx-swap="outerHTML"
+    {% endif %}>
+    <span class="badge" style="background: {{ status_color(scan.status) }}">
+        {{ scan.status }}
+        {% if scan.status == "running" %}<span aria-busy="true"></span>{% endif %}
+    </span>
+</span>
