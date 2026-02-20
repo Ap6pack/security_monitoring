@@ -77,9 +77,12 @@ These vulnerabilities can persist for up to 796 days due to certificate authorit
   - Multiple report formats: JSON, HTML, Markdown, CSV
   - Beautiful HTML reports with Jinja2 templates
   - Executive summaries in Markdown
+  - AlertManager with multi-channel dispatch and fault isolation
   - Email alerts via SMTP with HTML formatting
   - Slack webhook notifications with rich formatting
-  - Severity-based alert filtering
+  - Generic webhook alerts (PagerDuty, Teams, custom endpoints)
+  - Severity-based alert filtering and deduplication
+  - Alert history tracking per channel per finding
   - SQLite database for historical tracking
   - CVSS v3.1 scoring
   - Detailed remediation guidance
@@ -95,6 +98,7 @@ These vulnerabilities can persist for up to 796 days due to certificate authorit
 - **Continuous Monitoring Mode**
   - Scheduled scan daemon with configurable intervals
   - Delta detection — alerts only on new findings
+  - Automatic alert dispatch on new findings via AlertManager
   - Graceful signal handling (SIGINT/SIGTERM)
   - Scan history tracking and comparison
 
@@ -234,6 +238,7 @@ The monitor daemon:
 
 - Runs scans at the configured interval
 - Detects new findings by comparing against the last 7 days
+- Dispatches alerts via AlertManager when new findings are detected
 - Logs all activity with structured logging
 - Handles SIGINT/SIGTERM for graceful shutdown
 
@@ -312,6 +317,10 @@ ALERT_SEVERITY_THRESHOLD=HIGH
 
 ENABLE_SLACK_ALERTS=false
 SLACK_WEBHOOK_URL=https://hooks.slack.com/services/YOUR/WEBHOOK/URL
+
+# Webhook (generic HTTP POST — PagerDuty, Teams, custom)
+ENABLE_WEBHOOK_ALERTS=false
+WEBHOOK_URL=https://your-webhook-endpoint.example.com/alerts
 ```
 
 ## CLI Commands
@@ -444,7 +453,7 @@ security_monitoring/
 │   └── main.py                # CLI interface
 ├── .github/workflows/         # CI/CD pipeline
 ├── config/                    # Configuration files
-├── tests/                     # Test suite (406 tests)
+├── tests/                     # Test suite (488 tests)
 ├── data/                      # Database storage
 ├── logs/                      # Application logs
 ├── reports/                   # Generated reports
@@ -509,14 +518,28 @@ Slack alerts feature:
 - Grouped findings by severity level
 - Scan metadata and timing information
 
+### Webhook Alerts
+
+Configure generic HTTP POST webhook notifications for any endpoint (PagerDuty, Teams, custom):
+
+```bash
+ENABLE_WEBHOOK_ALERTS=true
+WEBHOOK_URL=https://your-webhook-endpoint.example.com/alerts
+```
+
+Webhook alerts send a JSON payload containing:
+
+- Scan ID and timestamp
+- Findings count and severity summary
+- Full finding details (domain, description, CVSS, remediation)
+
 ### Alert Thresholds
 
-Control which findings trigger alerts using `ALERT_SEVERITY_THRESHOLD`:
+Control which findings trigger alerts:
 
-- `CRITICAL` - Only critical findings
-- `HIGH` - High and critical findings
-- `MEDIUM` - Medium, high, and critical findings
-- `LOW` - All findings
+- `ALERT_ON_CRITICAL=true` - Alert on critical findings
+- `ALERT_ON_HIGH=true` - Alert on high severity findings
+- `ALERT_MIN_FINDINGS=1` - Minimum findings to trigger alert
 
 ## Usage Examples
 
@@ -641,7 +664,7 @@ Contributions are welcome! Please follow these steps:
 - Add type hints to all functions (validated with mypy in strict mode)
 - Write tests for new features (pytest with async support)
 - Update documentation as needed
-- Maintain 100% test pass rate (currently 406 tests passing)
+- Maintain 100% test pass rate (currently 488 tests passing)
 - Coverage gate: 80%+ (currently 85%+)
 - All code is type-safe with zero mypy errors
 - CI pipeline validates all PRs (lint, types, tests across Python 3.11-3.13)
@@ -662,15 +685,17 @@ Adam Rhys Heaton (Ap6pack)
 
 **Current Version: 0.1.0** - Production Ready
 
-406 tests passing, 85%+ coverage, zero lint/type errors, CI/CD pipeline active.
+488 tests passing, 85%+ coverage, zero lint/type errors, CI/CD pipeline active.
 
 ### Implemented Features
 
 - Multi-source subdomain discovery (crt.sh, subfinder, assetfinder)
 - Comprehensive DNS analysis with dangling CNAME detection
 - Platform-specific takeover detection (8 platforms: Heroku, GitHub Pages, AWS S3/EB, Azure, GCP, Netlify, Vercel)
+- AlertManager with multi-channel dispatch, deduplication, and fault isolation
 - Email alerting integration via SMTP with HTML formatting
 - Slack webhook notifications with rich formatting
+- Generic webhook alerts (PagerDuty, Teams, custom endpoints)
 - HTML/JSON/Markdown/CSV report generation
 - SQLite database for historical tracking and deduplication
 - CVSS v3.1 scoring and risk assessment
@@ -680,7 +705,7 @@ Adam Rhys Heaton (Ap6pack)
 - Docker deployment with docker-compose (API + monitor services)
 - CI/CD pipeline (GitHub Actions: lint, types, tests across Python 3.11-3.13)
 - Type-safe codebase (mypy strict mode, zero errors)
-- 406-test suite with 85%+ coverage
+- 488-test suite with 85%+ coverage
 
 ### Future Enhancements
 
@@ -691,7 +716,6 @@ Potential future additions (community contributions welcome):
 - [ ] GraphQL API for flexible querying
 - [ ] Integration with SIEM platforms (Splunk, Elastic, QRadar)
 - [ ] Integration with SOAR tools (TheHive, Cortex, Demisto)
-- [ ] PagerDuty/Opsgenie integration for incident management
 - [ ] Web dashboard for visualization and management
 - [ ] DNS hijacking detection
 - [ ] TLS/SSL misconfiguration scanning

@@ -23,7 +23,7 @@ The Security Monitoring Tool is a professional-grade security scanner designed t
 - **Comprehensive DNS analysis** (A, AAAA, CNAME, MX records)
 - **Intelligent detection** (dangling DNS, subdomain takeover across 8 platforms)
 - **Flexible reporting** (JSON, HTML, Markdown, CSV)
-- **Real-time alerting** (Email via SMTP, Slack via webhooks)
+- **Real-time alerting** (Email via SMTP, Slack via webhooks, generic webhooks)
 - **Persistent storage** (SQLite with async operations)
 
 ### Technology Stack
@@ -74,8 +74,10 @@ graph TB
     Reporters --> MD[Markdown Report]
     Reporters --> CSV[CSV Export]
 
-    Alerters --> Email[Email<br/>SMTP + TLS]
-    Alerters --> Slack[Slack<br/>Webhooks]
+    Alerters --> AlertMgr[AlertManager<br/>Coordinator]
+    AlertMgr --> Email[Email<br/>SMTP + TLS]
+    AlertMgr --> Slack[Slack<br/>Webhooks]
+    AlertMgr --> Webhook[Webhook<br/>HTTP POST]
 
     style Orchestrator fill:#4CAF50,color:#fff
     style DB fill:#2196F3,color:#fff
@@ -124,6 +126,10 @@ graph LR
 
         Alert[BaseAlerter] -.implements.-> EA[EmailAlerter]
         Alert -.implements.-> SA[SlackAlerter]
+        Alert -.implements.-> WA[WebhookAlerter]
+        AM[AlertManager] --> EA
+        AM --> SA
+        AM --> WA
     end
 
     subgraph Utils
@@ -209,12 +215,13 @@ sequenceDiagram
 
     Note over Orchestrator: Phase 6: Alerting
     alt Critical findings exist
-        Orchestrator->>DB: check_for_new_findings()
-        Orchestrator->>Alerter: send_alerts()
-        Alerter->>Alerter: filter_by_severity()
-        Alerter->>Alerter: check_deduplication()
-        Alerter-->>User: Email/Slack notification
-        Orchestrator->>DB: mark_findings_alerted()
+        Orchestrator->>Alerter: AlertManager.process_findings()
+        Alerter->>Alerter: filter_unalerted()
+        Alerter->>Alerter: check_severity_threshold()
+        Alerter->>Alerter: dispatch to Email/Slack/Webhook
+        Alerter->>DB: create_alert_history()
+        Alerter->>DB: mark_findings_alerted()
+        Alerter-->>User: Email/Slack/Webhook notification
     end
 
     Orchestrator-->>CLI: scan_complete
@@ -378,7 +385,7 @@ erDiagram
     ALERT_HISTORY {
         string id PK "UUID"
         string finding_id FK
-        string channel "email|slack"
+        string channel "email|slack|webhook"
         datetime sent_at
         boolean success
         text error_message
@@ -596,6 +603,7 @@ graph TB
 | Takeover Detector | Pattern matching | Custom patterns |
 | Database Manager | Data persistence | aiosqlite |
 | Report Generators | Output formatting | Jinja2, csv |
+| AlertManager | Alert coordination and dispatch | Custom |
 | Alert System | Notifications | smtplib, aiohttp |
 
 ### External Dependencies
@@ -606,6 +614,7 @@ graph TB
 | DNS Resolvers | DNS resolution | No limit (public) |
 | SMTP Server | Email delivery | Provider-dependent |
 | Slack Webhooks | Slack notifications | 1 req/sec |
+| Custom Webhooks | Generic HTTP POST alerts | Endpoint-dependent |
 | subfinder | Subdomain enumeration | N/A (local) |
 | assetfinder | Subdomain enumeration | N/A (local) |
 
@@ -744,7 +753,9 @@ The scanner exposes a full REST API for programmatic access:
 
 - **ScanScheduler** (`scheduler.py`) — interval-based scan loop with delta detection
 - **MonitorDaemon** (`monitor.py`) — signal handling, graceful shutdown, timeout management
+- **AlertManager** (`alerters/manager.py`) — multi-channel dispatch with deduplication, severity filtering, fault isolation, and history recording
 - Compares findings against 7-day history to identify new vulnerabilities
+- Automatically dispatches alerts when new findings are detected
 
 ### Docker Deployment
 
@@ -756,7 +767,8 @@ The scanner exposes a full REST API for programmatic access:
 
 ### Planned Enhancements
 
-1. **Web Dashboard** - Real-time monitoring UI
+1. ~~**Alerting Integration** - AlertManager with multi-channel dispatch~~ (Done)
+2. **Web Dashboard** - Real-time monitoring UI
 2. **Distributed Scanning** - Worker pool architecture
 3. **PostgreSQL Support** - Enterprise database option
 4. **Kubernetes Deployment** - Container orchestration via Helm charts

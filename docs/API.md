@@ -551,6 +551,116 @@ await alerter.send(
 
 ---
 
+### WebhookAlerter
+
+Sends alerts via generic HTTP POST to any webhook endpoint.
+
+#### Constructor
+
+```python
+WebhookAlerter(
+    webhook_url: str,
+    http_client: HTTPClient | None = None
+)
+```
+
+**Parameters:**
+
+- `webhook_url` (str): HTTP endpoint to POST alerts to
+- `http_client` (Optional[HTTPClient]): HTTP client (auto-created if None)
+
+#### Methods
+
+##### `async send(findings: list[Any], scan_id: str, severity_threshold: str = "HIGH") -> bool`
+
+Send webhook alert. POSTs a JSON payload with scan_id, timestamp, findings_count, severity_summary, and findings details.
+
+**Parameters:**
+
+- `findings` (list): List of findings
+- `scan_id` (str): Scan identifier
+- `severity_threshold` (str): Minimum severity
+
+**Returns:**
+
+- `bool`: True if sent successfully
+
+**Example:**
+
+```python
+alerter = WebhookAlerter(
+    webhook_url="https://your-endpoint.example.com/alerts"
+)
+
+await alerter.send(
+    findings=findings,
+    scan_id="scan-123",
+    severity_threshold="HIGH"
+)
+```
+
+---
+
+### AlertManager
+
+Central coordinator that dispatches alerts across all enabled channels with deduplication, severity filtering, fault isolation, and history recording.
+
+#### Constructor
+
+```python
+AlertManager(settings: Settings, db: DatabaseManager)
+```
+
+**Parameters:**
+
+- `settings` (Settings): Application settings (reads `enable_email_alerts`, `enable_slack_alerts`, `enable_webhook_alerts` and channel configs)
+- `db` (DatabaseManager): Database manager for alert history and finding updates
+
+#### Properties
+
+- `enabled_channels` (list[str]): Names of enabled alert channels
+- `has_channels` (bool): Whether any channels are configured
+
+#### Methods
+
+##### `async process_findings(findings: list[Any], scan_id: str) -> dict[str, Any]`
+
+Process findings and dispatch alerts to all enabled channels.
+
+**Parameters:**
+
+- `findings` (list): List of security findings from a scan
+- `scan_id` (str): Scan identifier
+
+**Returns:**
+
+- `dict`: Summary with `channels_notified`, `findings_alerted`, `failures`
+
+**Behavior:**
+
+1. Filters out already-alerted findings
+2. Applies severity threshold from config
+3. Checks minimum findings threshold
+4. Dispatches to each enabled channel (fault-isolated)
+5. Records AlertHistory per channel per finding
+6. Marks findings as alerted after successful dispatch
+
+**Example:**
+
+```python
+from security_scanner.alerters import AlertManager
+from security_scanner.config import load_settings
+
+settings = load_settings()
+alert_manager = AlertManager(settings=settings, db=db)
+
+result = await alert_manager.process_findings(findings, scan_id)
+print(f"Notified: {result['channels_notified']}")
+print(f"Alerted: {result['findings_alerted']} findings")
+```
+
+---
+
 ## Storage APIs
 
 ### DatabaseManager
