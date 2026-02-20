@@ -115,6 +115,10 @@ class Settings(BaseSettings):
     enable_slack_alerts: bool = Field(default=False, description="Enable Slack alerts")
     slack_webhook_url: str = Field(default="", description="Slack webhook URL")
 
+    # Webhook Alerting
+    enable_webhook_alerts: bool = Field(default=False, description="Enable webhook alerts")
+    webhook_url: str = Field(default="", description="Webhook URL for generic HTTP POST alerts")
+
     # Alert Thresholds
     alert_on_critical: bool = Field(default=True, description="Alert on critical findings")
     alert_on_high: bool = Field(default=True, description="Alert on high severity findings")

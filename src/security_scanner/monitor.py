@@ -4,6 +4,7 @@ import asyncio
 import contextlib
 import signal
 
+from security_scanner.alerters.manager import AlertManager
 from security_scanner.config import Settings
 from security_scanner.scheduler import ScanScheduler
 from security_scanner.storage.database import DatabaseManager
@@ -26,11 +27,13 @@ class MonitorDaemon:
         domains: list[str],
         interval_seconds: int = 3600,
     ) -> None:
+        alert_manager = AlertManager(settings=settings, db=db)
         self.scheduler = ScanScheduler(
             settings=settings,
             db=db,
             domains=domains,
             interval_seconds=interval_seconds,
+            alert_manager=alert_manager if alert_manager.has_channels else None,
         )
         self._shutdown_event = asyncio.Event()
 

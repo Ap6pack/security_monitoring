@@ -13,7 +13,12 @@ class TestMonitorDaemon:
 
     @pytest.fixture
     def settings(self):
-        return MagicMock()
+        mock = MagicMock()
+        # Disable alert channels to avoid HTTPClient event-loop issues in sync tests
+        mock.enable_email_alerts = False
+        mock.enable_slack_alerts = False
+        mock.enable_webhook_alerts = False
+        return mock
 
     @pytest.fixture
     def db(self):

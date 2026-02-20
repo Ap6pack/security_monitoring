@@ -3,7 +3,7 @@
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, status
 
 from security_scanner.api.auth import verify_api_key
-from security_scanner.api.dependencies import get_db, get_orchestrator
+from security_scanner.api.dependencies import get_db, get_orchestrator, get_settings
 from security_scanner.api.models import (
     ErrorResponse,
     FindingResponse,
@@ -14,6 +14,7 @@ from security_scanner.api.models import (
     ScanResponse,
     ScanSummary,
 )
+from security_scanner.config import Settings
 from security_scanner.orchestrator import ScanOrchestrator
 from security_scanner.storage.database import DatabaseManager
 from security_scanner.storage.models import Finding, Scan
@@ -70,6 +71,7 @@ async def _run_scan_background(
     db: DatabaseManager,
     scan_id: str,
     domains: list[str],
+    settings: Settings | None = None,
 ) -> None:
     """Execute a scan in the background, updating the existing scan record."""
     try:
@@ -83,6 +85,20 @@ async def _run_scan_background(
             status="completed",
             findings_count=findings_count,
         )
+
+        # Dispatch alerts for findings if any channels are enabled
+        if settings is not None:
+            from security_scanner.alerters.manager import AlertManager
+
+            alert_manager = AlertManager(settings=settings, db=db)
+            if alert_manager.has_channels:
+                findings: list[object] = result["findings"]
+                if findings:
+                    try:
+                        await alert_manager.process_findings(findings, scan_id)
+                    except Exception:
+                        logger.exception("Alert processing failed", scan_id=scan_id)
+
     except Exception:
         logger.exception("Background scan failed", scan_id=scan_id, domains=domains)
         from datetime import UTC, datetime
@@ -109,6 +125,7 @@ async def create_scan(
     background_tasks: BackgroundTasks,
     orchestrator: ScanOrchestrator = Depends(get_orchestrator),
     db: DatabaseManager = Depends(get_db),
+    settings: Settings = Depends(get_settings),
 ) -> ScanCreatedResponse:
     """Start a new security scan.
 
@@ -132,6 +149,7 @@ async def create_scan(
         db,
         scan_id,
         request.domains,
+        settings,
     )
 
     return ScanCreatedResponse(

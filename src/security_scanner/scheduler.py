@@ -1,13 +1,18 @@
 """Scan scheduling engine for continuous monitoring."""
 
+from __future__ import annotations
+
 import asyncio
 from datetime import UTC, datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from security_scanner.config import Settings
 from security_scanner.orchestrator import ScanOrchestrator
 from security_scanner.storage.database import DatabaseManager
 from security_scanner.utils.logger import get_logger
+
+if TYPE_CHECKING:
+    from security_scanner.alerters.manager import AlertManager
 
 logger = get_logger(__name__)
 
@@ -25,11 +30,13 @@ class ScanScheduler:
         db: DatabaseManager,
         domains: list[str],
         interval_seconds: int = 3600,
+        alert_manager: AlertManager | None = None,
     ) -> None:
         self.settings = settings
         self.db = db
         self.domains = domains
         self.interval_seconds = interval_seconds
+        self.alert_manager = alert_manager
         self._orchestrator: ScanOrchestrator | None = None
         self._running = False
         self._scan_count = 0
@@ -86,6 +93,13 @@ class ScanScheduler:
 
             # Delta detection: compare with previous scan
             new_findings = await self._detect_new_findings(findings)
+
+            # Dispatch alerts for new findings
+            if new_findings and self.alert_manager is not None:
+                try:
+                    await self.alert_manager.process_findings(new_findings, scan_id)
+                except Exception:
+                    logger.exception("Alert processing failed", scan_id=scan_id)
 
             logger.info(
                 "Scheduled scan completed",

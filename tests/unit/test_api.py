@@ -98,6 +98,10 @@ def mock_settings() -> MagicMock:
     settings.dns_nameservers = ["8.8.8.8"]
     settings.subdomain_sources = ["crtsh"]
     settings.report_output_dir = Path("/tmp/reports")
+    # Disable alert channels to prevent AlertManager from creating real HTTP clients
+    settings.enable_email_alerts = False
+    settings.enable_slack_alerts = False
+    settings.enable_webhook_alerts = False
     return settings
 
 
